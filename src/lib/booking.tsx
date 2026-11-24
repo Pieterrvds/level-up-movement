@@ -12,7 +12,7 @@ export const NOTICE_HOURS = 12; // booking_notice_hours on the server
 export const NO_KIND = "Personal training"; // hours without a label are the classic 1:1 training
 
 export type Coach = { id: string; name: string; short: string; role: string; bio: string; specialties: string[]; photo: string; available: boolean };
-type HoursRow = { trainerId: string; weekday: number | null; date: string | null; start: number; end: number; kind: string; activity: string; location: string; pending: boolean };
+export type HoursRow = { id: string; trainerId: string; weekday: number | null; date: string | null; start: number; end: number; kind: string; activity: string; location: string; pending: boolean };
 type Taken = { trainer_id: string; day: string; hour: number; booking_id: string | null; status: string | null };
 export type Pricing = { price: number; introPrice: number; place: string; trainers: Record<string, number>; packs: { size: number; price: number }[] };
 export type Slot = { coachId: string; day: string; hour: number; what: string; place: string; state: "free" | "mine" | "taken" };
@@ -48,6 +48,8 @@ type Data = {
   freeDays: (coachId: string, kind?: string) => { day: string; free: number }[];
   /** what a coach gives, from the labels on his hours */
   kindsOf: (coachId: string) => string[];
+  /** the rows of hours of one coach as he set them (for the coach himself: also what waits for approval) */
+  hoursOf: (coachId: string) => HoursRow[];
   reload: () => Promise<void>;
 };
 const Ctx = createContext<Data | null>(null);
@@ -123,7 +125,8 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       return out;
     };
     const kindsOf = (coachId: string) => [...new Set(hours.filter((r) => r.trainerId === coachId && r.kind === "open" && !r.pending).map((r) => r.activity || NO_KIND))];
-    return { ready, error, coaches, pricing, coach: (id) => byId.get(id), slots, freeDays, kindsOf, reload };
+    const hoursOf = (coachId: string) => hours.filter((r) => r.trainerId === coachId);
+    return { ready, error, coaches, pricing, coach: (id) => byId.get(id), slots, freeDays, kindsOf, hoursOf, reload };
   }, [coaches, hours, taken, pricing, ready, error, reload]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

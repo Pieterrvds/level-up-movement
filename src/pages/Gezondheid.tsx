@@ -8,7 +8,7 @@ import { call, friendly } from "../lib/supabase";
 
 const PRIVACY = "https://pieterrvds.github.io/LEVEL-UP-/privacy.html";
 // the same eight questions, in the same order, as the old site (q1 … q8 on the server)
-const QUESTIONS: [string, string][] = [
+export const QUESTIONS: [string, string][] = [
   ["q1", "Heeft een arts ooit gezegd dat je een hartprobleem of hoge bloeddruk hebt?"],
   ["q2", "Voel je pijn in je borst in rust, in het dagelijks leven of tijdens het sporten?"],
   ["q3", "Verlies je je evenwicht door duizeligheid, of ben je de laatste 12 maanden flauwgevallen?"],

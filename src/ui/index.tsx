@@ -156,14 +156,16 @@ export function Avatar({ name, src, size = 44, status }: { name: string; src?: s
 
 /* ---------- ListRow ---------- */
 /** `below`: something under the two lines (a label that is too wide to stand beside them); the title then wraps instead of being cut */
-type RowProps = { lead?: ReactNode; title: string; text?: string; trail?: ReactNode; below?: ReactNode; onClick?: () => void; chevron?: boolean };
-export function ListRow({ lead, title, text, trail, below, onClick, chevron }: RowProps) {
+/** `wrap`: the two lines may run over more lines instead of being cut (for a place, which must be readable in full) */
+type RowProps = { lead?: ReactNode; title: string; text?: string; trail?: ReactNode; below?: ReactNode; wrap?: boolean; onClick?: () => void; chevron?: boolean };
+export function ListRow({ lead, title, text, trail, below, wrap, onClick, chevron }: RowProps) {
+  const cut = !below && !wrap;
   const body = (
     <>
       {lead}
       <span className="min-w-0 flex-1 text-left">
-        <span className={cx("block font-semibold", !below && "truncate")}>{title}</span>
-        {text && <span className={cx("block text-sm text-muted", !below && "truncate")}>{text}</span>}
+        <span className={cx("block font-semibold", cut && "truncate")}>{title}</span>
+        {text && <span className={cx("block text-sm text-muted", cut && "truncate")}>{text}</span>}
         {below && <span className="mt-1.5 block">{below}</span>}
       </span>
       {trail}

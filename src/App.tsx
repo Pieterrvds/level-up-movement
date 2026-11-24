@@ -13,6 +13,8 @@ import { Boeken, BoekenCoach } from "./pages/Boeken";
 import Gezondheid from "./pages/Gezondheid";
 import Sessies from "./pages/Sessies";
 import { BookingProvider } from "./lib/booking";
+import { CoachProvider } from "./lib/coach";
+import Agenda from "./pages/Agenda";
 
 // The look and the example screens (made-up data): open to everyone, they are the reference while the app is built
 const reference = (
@@ -63,6 +65,7 @@ export default function App() {
   const last = account.role === "admin" ? "meer" : "profiel";
   return (
     <BookingProvider>
+    <CoachProvider>
     <Routes>
       <Route element={<AppShell role={account.role} />}>
         <Route index element={<Start />} />
@@ -71,7 +74,7 @@ export default function App() {
         <Route path="boeken/:id" element={<BoekenCoach />} />
         <Route path="gezondheid" element={<Gezondheid />} />
         <Route path="sessies" element={<Sessies />} />
-        <Route path="agenda" element={<Later title="Agenda" step="stap 4" text="Je sessies en groepslessen per dag, en je uren." />} />
+        <Route path="agenda" element={account.player.trainerId ? <Agenda /> : <Navigate to="/" replace />} />
         <Route path="team" element={<Later title="Team" step="stap 7" text="Elke trainer met zijn lessen en uren." />} />
         <Route path="chat" element={<Later title="Chat" step="stap 6" text="Berichten met je coach of je klanten." />} />
         <Route path={last} element={<Profiel title={account.role === "admin" ? "Meer" : "Profiel"} />} />
@@ -79,6 +82,7 @@ export default function App() {
         <Route path="*" element={<Later title="Niet gevonden" text="Deze pagina bestaat niet." />} />
       </Route>
     </Routes>
+    </CoachProvider>
     </BookingProvider>
   );
 }

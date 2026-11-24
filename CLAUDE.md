@@ -117,10 +117,28 @@ willen; het platform verbindt hen met klanten. Gevolgen voor alles wat gebouwd w
   - **Nog niet in de nieuwe app** (wel op de oude site): een duosessie, een gratis beurt van de spaarkaart
     inzetten, je naam wijzigen (de server heeft daar geen functie voor), en de mail die de oude site bij een
     aanvraag via een externe dienst stuurt. De melding aan de coach doet de server zelf.
-- **Volgende: stap 4**, de coach: Vandaag (actief of afwezig, te doen, de dag), Agenda en uren.
+- **Stap 4 klaar (24 november 2026):** de coach.
+  - `src/lib/coach.tsx`: `useCoach()` laadt voor wie een trainerkaart heeft zijn sessies (`coach_bookings`), zijn
+    verdiensten (`coach_earnings`) en de goedgekeurde soorten (`training_kinds`). `todo()` geeft wat op hem wacht:
+    aanvragen (een wekelijkse aanvraag telt één keer) en bevestigde sessies die begonnen zijn.
+  - `src/pages/Vandaag.tsx`: schakelaar actief/afwezig (`set_trainer_available`), drie cijfers, "Te doen" en
+    "Je dag". `src/pages/CoachSessie.tsx`: het venster van één sessie voor de coach, met de nota van de klant en
+    de gezondheidsantwoorden die ertoe doen. Acties: Bevestigen / Weigeren (`respond_booking`; bij een wekelijkse
+    aanvraag geldt het antwoord voor alle weken), Afgerond (`reward_session`, vanaf de dag zelf), Niet gekomen
+    (`mark_no_show`, na de start) en Verplaatsen (`move_booking`, alleen deze of elke week).
+  - `src/pages/Agenda.tsx`: tab Sessies (wat komt, per dag) en tab Mijn uren: elke week, extra uren, vrije dagen.
+    Toevoegen en aanpassen met `save_trainer_hours`, verwijderen met `delete_trainer_hours`. "Wat geef je?" is
+    verplicht; een nieuwe soort wacht op de beheerder en klanten zien die uren tot dan niet. De server weigert
+    uren weg te nemen waarin al geboekt is.
+  - Profiel van een coach: kaart "Verdiensten" (verdiend, uitbetaald, tegoed).
+  - `ListRow` heeft `wrap`: de twee regels mogen doorlopen (een plaats moet volledig leesbaar zijn).
+  - "Betaald" aanduiden kan een coach niet: `mark_paid_in_person` is op de server alleen voor de beheerder (stap 7).
+  - Nog niet: het afschrift per maand (`coach_statement`), een nieuwe soort voorstellen met foto en tekst
+    (`kind_propose`; nu volstaat de naam bij de uren), groepslessen (stap 5).
+- **Volgende: stap 5**, groepslessen voor klant en coach.
 - **Getest** (Playwright, 390, 360 en 1280 px) tegen een nagebouwde Supabase met de echte `schema.sql`: 42
-  controles van stap 1, 37 van stap 2 en 36 van stap 3. De tests staan niet in de repository (tijdelijke map van
-  de sessie). **Niet getest:** de echte Supabase, echte mails, echte meldingen, het echte opladen van een foto,
-  het agendabestand op een telefoon, echte telefoons en Safari.
+  controles van stap 1, 37 van stap 2, 36 van stap 3 en 35 van stap 4. De tests staan niet in de repository
+  (tijdelijke map van de sessie). **Niet getest:** de echte Supabase, echte mails, echte meldingen, het echte
+  opladen van een foto, het agendabestand op een telefoon, echte telefoons en Safari.
 - **Nog te beslissen:** wat een bezoeker ziet vóór hij inlogt (nu meteen het inlogscherm; de oude site heeft een
   homepage met uitleg en coaches), en waar de privacytekst komt (de link wijst nu naar de oude site).

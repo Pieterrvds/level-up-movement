@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { Avatar, Badge, Button, Card, CardHead, List, ListRow, Notice, Page, PasswordField, Progress, Select, Sheet, Stat, Tabs } from "../ui";
 import { useAccount } from "../lib/account";
 import { useBooking, euro } from "../lib/booking";
+import { useCoach } from "../lib/coach";
 import { call, friendly, supabase } from "../lib/supabase";
 import { levelOf } from "../lib/level";
 import { ROLE_LABEL } from "../nav";
@@ -29,6 +30,7 @@ async function squarePhoto(file: File): Promise<Blob> {
 export default function Profiel({ title }: { title: string }) {
   const { player, roles, role, setRole, logOut, reload, setPassword } = useAccount();
   const data = useBooking();
+  const money = useCoach().earnings;
   const navigate = useNavigate();
   const file = useRef<HTMLInputElement>(null);
   const [sheet, setSheet] = useState<"" | "birthday" | "password" | "delete">("");
@@ -85,6 +87,15 @@ export default function Profiel({ title }: { title: string }) {
         <Card>
           <CardHead title="Weergave" hint="Je bent coach en beheerder. Kies welke kant van de app je ziet." />
           <Tabs label="Weergave" value={role} onChange={(r) => { setRole(r); navigate("/"); }} tabs={roles.map((id) => ({ id, label: ROLE_LABEL[id] }))} />
+        </Card>
+      )}
+
+      {player.trainerId && money && (
+        <Card>
+          <CardHead title="Verdiensten" hint={`${money.sessions} ${money.sessions === 1 ? "sessie" : "sessies"} die tellen. Verwacht van wat bevestigd is: ${euro(money.expected)}.`} />
+          <div className="grid grid-cols-3 gap-2">
+            <Stat value={euro(money.earned)} label="verdiend" /><Stat value={euro(money.paid)} label="uitbetaald" /><Stat value={euro(money.owed)} label="tegoed" />
+          </div>
         </Card>
       )}
 

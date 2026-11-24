@@ -9,6 +9,7 @@ import { useBooking, NO_KIND } from "../lib/booking";
 import { dateKey, addDays, hourSpan, inDays, longDay, slotStart } from "../lib/dates";
 import { levelOf } from "../lib/level";
 import { mailReturn } from "../lib/supabase";
+import Vandaag from "./Vandaag";
 
 const today = () => { const t = new Date().toLocaleDateString("nl-BE", { weekday: "long", day: "numeric", month: "long" }); return t[0].toUpperCase() + t.slice(1); };
 /** sessions that are still to come: asked for or confirmed */
@@ -87,13 +88,12 @@ export default function Start() {
   const { player, role } = useAccount();
   const first = (player?.name || "").trim().split(/\s+/)[0] || "daar";
   if (role === "klant") return <Klant />;
+  if (role === "coach") return <Vandaag />;
   return (
-    <Page title={role === "coach" ? "Vandaag" : "Overzicht"} text={today()}>
+    <Page title="Overzicht" text={today()}>
       {mailReturn.type === "signup" && <Notice>Je e-mail is bevestigd. Welkom bij LEVEL-UP!</Notice>}
       <Card pad={false}>
-        {role === "coach"
-          ? <Empty icon={<Hammer size={22} />} title="Je dag komt in stap 4" text={`Hallo ${first}. Hier komen je sessies van vandaag en wat op jou wacht.`} />
-          : <Empty icon={<Hammer size={22} />} title="Het overzicht komt in stap 7" text={`Hallo ${first}. Hier komt wat op jou wacht: goedkeuren, sollicitaties en wijzigingen van coaches.`} />}
+        <Empty icon={<Hammer size={22} />} title="Het overzicht komt in stap 7" text={`Hallo ${first}. Hier komt wat op jou wacht: goedkeuren, sollicitaties en wijzigingen van coaches.`} />
       </Card>
     </Page>
   );
