@@ -30,7 +30,7 @@ willen; het platform verbindt hen met klanten. Gevolgen voor alles wat gebouwd w
 
 - `src/index.css`: alle kleuren, het lettertype en de rondingen als tokens (`@theme`).
 - `src/ui/index.tsx`: de bouwstenen (Button, Card, Field, Tabs, Chip, Badge, Avatar, ListRow, List, Progress, Stat,
-  Switch, Notice, Empty, Sheet, Page).
+  Figures, Switch, Notice, Empty, Sheet, Page).
 - `src/shell/AppShell.tsx`: het kader: balk bovenaan en vier knoppen onderaan (telefoon), kolom links (computer).
 - `src/nav.ts`: welke vier knoppen elke rol ziet.
 - `src/pages/`: de schermen. `Stijl.tsx` toont alle bouwstenen; `Voorbeeld.tsx` zijn startschermen met verzonnen
@@ -49,6 +49,8 @@ willen; het platform verbindt hen met klanten. Gevolgen voor alles wat gebouwd w
 7. Elke rij die zijwaarts schuift, gebruikt de klasse `slide-x` (kan niet op en neer bewegen).
 8. Teksten: Nederlands, kort, gewone woorden, één boodschap per regel. Een leeg scherm zegt in één zin wat er komt
    en heeft één knop.
+9. Bedragen: altijd via `euro()` ("€ 240", teken en getal blijven samen). Geld staat in rijen (`Figures`: label
+   links, bedrag rechts), niet in de kleine tegels (`Stat`): die zijn voor korte tellingen.
 
 ## Vaste afspraken
 

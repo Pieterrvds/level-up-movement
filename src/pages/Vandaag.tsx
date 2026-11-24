@@ -4,11 +4,11 @@ import { CalendarCheck, UsersRound } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Avatar, Badge, Button, Card, Empty, List, ListRow, Notice, Page, Stat, Switch } from "../ui";
 import { useAccount } from "../lib/account";
-import { useBooking, NO_KIND, euro } from "../lib/booking";
-import { useCoach, todo } from "../lib/coach";
+import { useBooking, NO_KIND } from "../lib/booking";
+import { useCoach, todo, coming } from "../lib/coach";
 import type { CoachBooking } from "../lib/coach";
 import { call, friendly } from "../lib/supabase";
-import { dateKey, everyWeekday, hourText, isoWeekday, shortDay } from "../lib/dates";
+import { addDays, dateKey, everyWeekday, hourText, isoWeekday, shortDay } from "../lib/dates";
 import CoachSessie from "./CoachSessie";
 import CoachKlas from "./CoachKlas";
 
@@ -35,6 +35,9 @@ export default function Vandaag() {
   const toFinish = coach.classes.filter((c) => c.canFinish);
   const dayClasses = coach.classes.filter((c) => c.date === key && c.status !== "cancelled");
   const todoCount = requests.length + finish.length + toFinish.length;
+  // what is still to come in the next seven days, sessions and classes together
+  const until = dateKey(addDays(new Date(), 7));
+  const week = coming(coach.bookings).filter((b) => b.date <= until).length + coach.classes.filter((c) => c.status === "scheduled" && c.date <= until && new Date(c.endsAt) > new Date()).length;
   const flip = async (next: boolean) => {
     setBusy(true); setError("");
     try { await call("set_trainer_available", { p_trainer: player?.trainerId, p_on: next }); await data.reload(); } catch (err) { setError(friendly(err)); }
@@ -55,7 +58,7 @@ export default function Vandaag() {
       {flash && <Notice>{flash}</Notice>}
       {(error || coach.error) && <Notice tone="danger">{error || coach.error}</Notice>}
       <div className="grid grid-cols-3 gap-2">
-        <Stat value={todoCount} label="te doen" /><Stat value={day.filter((b) => b.status !== "completed").length + dayClasses.filter((c) => c.status === "scheduled").length} label="vandaag" /><Stat value={euro(coach.earnings?.owed || 0)} label="tegoed" />
+        <Stat value={todoCount} label="te doen" /><Stat value={day.filter((b) => b.status !== "completed").length + dayClasses.filter((c) => c.status === "scheduled").length} label="vandaag" /><Stat value={week} label="deze week" />
       </div>
       <div>
         <h2 className="mb-2 px-1 text-lg font-semibold">Te doen</h2>

@@ -2,7 +2,7 @@
 // or field itself. A new block is added here first (and shown on the "Stijl" page), then used.
 import { useEffect, useId, useRef, useState } from "react";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
-import { ChevronRight, Eye, EyeOff, X } from "lucide-react";
+import { ChevronRight, Eye, EyeOff, SendHorizontal, X } from "lucide-react";
 
 const cx = (...parts: (string | false | null | undefined)[]) => parts.filter(Boolean).join(" ");
 
@@ -198,10 +198,25 @@ export function Progress({ value, max, label, note }: { value: number; max: numb
 /* ---------- Stat: one number that matters ---------- */
 export function Stat({ value, label }: { value: ReactNode; label: string }) {
   return (
-    <div className="rounded-field bg-sunken px-4 py-3">
-      <div className="text-2xl font-semibold tracking-tight">{value}</div>
+    <div className="min-w-0 rounded-field bg-sunken px-3 py-3 sm:px-4">
+      <div className="text-2xl font-semibold tracking-tight whitespace-nowrap">{value}</div>
       <div className="text-sm text-muted">{label}</div>
     </div>
+  );
+}
+
+/* ---------- Figures: amounts under each other, the name left and the number right. For money and anything
+   that can grow long; a row never breaks. Three small counts side by side are a row of Stat. ---------- */
+export function Figures({ rows }: { rows: { label: string; value: ReactNode; strong?: boolean }[] }) {
+  return (
+    <dl className="divide-y divide-line rounded-field bg-sunken px-4">
+      {rows.map((r) => (
+        <div key={r.label} className="flex items-baseline justify-between gap-4 py-3">
+          <dt className="text-muted">{r.label}</dt>
+          <dd className={cx("whitespace-nowrap tabular-nums", r.strong ? "text-xl font-semibold tracking-tight" : "font-semibold")}>{r.value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
@@ -254,6 +269,44 @@ export function Sheet({ open, onClose, title, children, footer }: { open: boolea
         {footer && <footer className="border-t border-line px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">{footer}</footer>}
       </div>
     </dialog>
+  );
+}
+
+/* ---------- Count: how many are new (on the Chat button, on a row) ---------- */
+export function Count({ n, label }: { n: number; label?: string }) {
+  if (!n) return null;
+  return <span aria-label={label} className="inline-grid h-5 min-w-5 place-items-center rounded-full bg-accent-ink px-1.5 text-[11px] leading-none font-bold text-white tabular-nums">{n > 9 ? "9+" : n}</span>;
+}
+
+/* ---------- Bubble: one message in a conversation. Yours on the right (dark), the other's on the left ---------- */
+export function Bubble({ mine, name, time, children, below }: { mine?: boolean; name?: string; time?: string; children: ReactNode; below?: ReactNode }) {
+  return (
+    <div className={cx("flex flex-col", mine ? "items-end" : "items-start")}>
+      <div className={cx("max-w-[82%] rounded-2xl px-3.5 py-2 text-[15px] leading-snug sm:max-w-[70%]", mine ? "rounded-br-md bg-brand text-white" : "rounded-bl-md border border-line bg-surface")}>
+        {name && <span className="mb-0.5 block text-xs font-semibold text-accent-ink">{name}</span>}
+        <span className="break-words whitespace-pre-wrap">{children}</span>
+        {time && <span className={cx("mt-0.5 block text-right text-[11px] leading-none tabular-nums", mine ? "text-white/65" : "text-faint")}>{time}</span>}
+      </div>
+      {below && <div className="mt-1 flex items-center gap-2 px-1 text-xs text-muted">{below}</div>}
+    </div>
+  );
+}
+
+/* ---------- Composer: the line where you type a message, with the send button ---------- */
+export function Composer({ value, onChange, onSend, busy, label = "Bericht", max = 2000 }: { value: string; onChange: (v: string) => void; onSend: () => void; busy?: boolean; label?: string; max?: number }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  // the field grows with the text, up to about five lines
+  useEffect(() => { const t = ref.current; if (!t) return; t.style.height = "auto"; t.style.height = `${Math.min(t.scrollHeight, 132)}px`; }, [value]);
+  const can = Boolean(value.trim()) && !busy;
+  return (
+    <form className="flex items-end gap-2" onSubmit={(e) => { e.preventDefault(); if (can) onSend(); }}>
+      <textarea ref={ref} rows={1} value={value} maxLength={max} aria-label={label} placeholder={label} enterKeyHint="send"
+        onChange={(e) => onChange(e.target.value)}
+        // a computer keyboard: Enter sends, Shift+Enter is a new line. On a phone Enter stays a new line.
+        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && window.matchMedia("(pointer: fine)").matches) { e.preventDefault(); if (can) onSend(); } }}
+        className="min-h-11 flex-1 resize-none rounded-[22px] border border-line bg-canvas px-4 py-2.5 text-base leading-snug outline-none placeholder:text-faint focus:border-brand" />
+      <button type="submit" disabled={!can} aria-label="Verstuur" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand text-white transition-opacity disabled:opacity-35"><SendHorizontal size={20} aria-hidden /></button>
+    </form>
   );
 }
 

@@ -24,6 +24,9 @@ export type Player = {
   series?: Series[];
   /** "MM-DD", or empty */
   birthday?: string | null;
+  /** notifications of chat messages and of news (new classes): choices of the account, on by default */
+  pushChat?: boolean;
+  pushNews?: boolean;
   bookings: Booking[];
 };
 export type Pack = { id: string; size: number; price: number; status: string; remaining: number };

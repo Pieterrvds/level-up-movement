@@ -1,9 +1,9 @@
 // Your account: who you are, your sessions and packs, your progress, your settings and logging out.
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { CalendarDays, Camera, Cake, HeartPulse, KeyRound, LogOut, Palette, Ticket, Trash2 } from "lucide-react";
+import { CalendarDays, Camera, Cake, HeartPulse, KeyRound, LogOut, Palette, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Avatar, Badge, Button, Card, CardHead, List, ListRow, Notice, Page, PasswordField, Progress, Select, Sheet, Stat, Tabs } from "../ui";
+import { Avatar, Badge, Button, Card, CardHead, Figures, List, ListRow, Notice, Page, PasswordField, Progress, Select, Sheet, Stat, Tabs } from "../ui";
 import { useAccount } from "../lib/account";
 import { useBooking, euro } from "../lib/booking";
 import { useCoach } from "../lib/coach";
@@ -33,7 +33,8 @@ export default function Profiel({ title }: { title: string }) {
   const money = useCoach().earnings;
   const navigate = useNavigate();
   const file = useRef<HTMLInputElement>(null);
-  const [sheet, setSheet] = useState<"" | "birthday" | "password" | "delete">("");
+  const [sheet, setSheet] = useState<"" | "birthday" | "password" | "delete" | "pack">("");
+  const [packSize, setPackSize] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [flash, setFlash] = useState("");
@@ -92,10 +93,13 @@ export default function Profiel({ title }: { title: string }) {
 
       {player.trainerId && money && (
         <Card>
-          <CardHead title="Verdiensten" hint={`${money.sessions} ${money.sessions === 1 ? "sessie" : "sessies"} die tellen. Verwacht van wat bevestigd is: ${euro(money.expected)}.`} />
-          <div className="grid grid-cols-3 gap-2">
-            <Stat value={euro(money.earned)} label="verdiend" /><Stat value={euro(money.paid)} label="uitbetaald" /><Stat value={euro(money.owed)} label="tegoed" />
-          </div>
+          <CardHead title="Verdiensten" hint={`${money.sessions} ${money.sessions === 1 ? "sessie" : "sessies"} die tellen.`} />
+          <Figures rows={[
+            { label: "Tegoed", value: euro(money.owed), strong: true },
+            { label: "Al uitbetaald", value: euro(money.paid) },
+            { label: "Verdiend in totaal", value: euro(money.earned) },
+            { label: "Nog verwacht", value: euro(money.expected) },
+          ]} />
         </Card>
       )}
 
@@ -120,12 +124,10 @@ export default function Profiel({ title }: { title: string }) {
               <div><Button variant="secondary" size="sm" disabled={busy} onClick={() => void run(async () => { await call("cancel_pack_request", { p_id: asked.id }); await reload(); }, "Je aanvraag is ingetrokken.")}>Aanvraag intrekken</Button></div>
             </div>
           ) : (
-            <div className="grid gap-2">
+            <div className="-mx-5 -mb-5 divide-y divide-line overflow-hidden rounded-b-card border-t border-line">
               {data.pricing.packs.map((o) => (
-                <div key={o.size} className="flex items-center justify-between gap-3 rounded-field bg-sunken px-4 py-3">
-                  <span className="flex items-center gap-3"><Ticket size={20} className="shrink-0 text-muted" aria-hidden /><span><span className="block font-semibold">{o.size} sessies · {euro(o.price)}</span><span className="block text-sm text-muted">{euro(Math.round((o.price / o.size) * 100) / 100)} per sessie</span></span></span>
-                  <Button variant="secondary" size="sm" disabled={busy} onClick={() => void run(async () => { await call("request_pack", { p_size: o.size, p_pay: "in_person" }); await reload(); }, "Aangevraagd. Betaal ter plaatse; daarna staan je beurten klaar.")}>Aanvragen</Button>
-                </div>
+                <ListRow key={o.size} wrap title={`${o.size}\u00a0sessies`} text={`${euro(Math.round((o.price / o.size) * 100) / 100)} per sessie`}
+                  trail={<span className="font-semibold whitespace-nowrap tabular-nums">{euro(o.price)}</span>} onClick={() => { setError(""); setFlash(""); setPackSize(o.size); setSheet("pack"); }} />
               ))}
             </div>
           )}
@@ -145,6 +147,16 @@ export default function Profiel({ title }: { title: string }) {
         <Button variant="secondary" icon={<LogOut size={18} />} disabled={busy} onClick={() => void run(logOut, "")}>Uitloggen</Button>
         <Button variant="ghost" icon={<Trash2 size={18} />} onClick={() => { setError(""); setSheet("delete"); }}>Account verwijderen</Button>
       </div>
+
+      <Sheet open={sheet === "pack"} onClose={close} title="Pakket aanvragen"
+        footer={<Button block size="lg" disabled={busy} onClick={() => void run(async () => { await call("request_pack", { p_size: packSize, p_pay: "in_person" }); await reload(); }, "Aangevraagd. Betaal ter plaatse; daarna staan je beurten klaar.")}>{busy ? "Bezig…" : "Vraag dit pakket aan"}</Button>}>
+        {(() => { const o = data.pricing.packs.find((x) => x.size === packSize); return o ? (<>
+          <p className="text-2xl font-semibold tracking-tight">{o.size} sessies</p>
+          <div className="mt-4"><Figures rows={[{ label: "Prijs", value: euro(o.price), strong: true }, { label: "Per sessie", value: euro(Math.round((o.price / o.size) * 100) / 100) }]} /></div>
+          <p className="mt-4 text-muted">Je betaalt ter plaatse. Daarna staan je beurten klaar en gebruikt elke boeking er vanzelf één.</p>
+        </>) : null; })()}
+        {error && <div className="mt-3"><Notice tone="danger">{error}</Notice></div>}
+      </Sheet>
 
       <Sheet open={sheet === "birthday"} onClose={close} title="Geboortedag"
         footer={<div className="flex gap-2">

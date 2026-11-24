@@ -164,7 +164,8 @@ export function useBooking(): Data {
   return value;
 }
 
-export const euro = (n: number) => `€ ${Number.isInteger(n) ? n : n.toFixed(2).replace(".", ",")}`;
+// "€ 240": the sign and the amount never come apart at the end of a line (a non-breaking space between them)
+export const euro = (n: number) => `€\u00a0${n.toLocaleString("nl-BE", { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`;
 
 /** What a session costs this person, and why */
 export function quote(player: { introEligible?: boolean; packs?: { status: string; remaining: number }[] } | null, pricing: Pricing, coachId: string) {

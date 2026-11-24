@@ -88,6 +88,18 @@ const SERVER: [RegExp, string | ((m: RegExpMatchArray) => string)][] = [
   [/This class is already finished/, "Deze les is al afgerond."],
   [/The class hasn't started yet/, "De les is nog niet begonnen."],
   [/This class can no longer be cancelled/, "Deze les kan je niet meer annuleren."],
+  [/Conversation not found/, "Dit gesprek vinden we niet meer."],
+  [/Type a message first/, "Typ eerst een bericht."],
+  [/message is too long/, "Dit bericht is te lang (hoogstens 2000 tekens)."],
+  [/Slow down a little/, "Even wachten: probeer het over een minuut opnieuw."],
+  [/This coach is not on the chat yet/, "Deze coach zit nog niet op de chat."],
+  [/This is you/, "Dit ben je zelf."],
+  [/Unknown coach/, "Deze coach vinden we niet."],
+  [/Pick someone else to chat with/, "Kies iemand anders."],
+  [/Member not found/, "Deze persoon vinden we niet."],
+  [/Levelupy only posts/, "Met Levelupy kan je niet chatten."],
+  [/can't like your own message/, "Je eigen bericht kan je geen hartje geven."],
+  [/group chat can't be deleted for yourself/, "Een groepschat kan je niet verwijderen: archiveer hem."],
   [/Log in (first|to book)/, "Log eerst in."],
 ];
 
@@ -106,9 +118,30 @@ export function friendly(error: unknown): string {
   return text || "Er ging iets mis. Probeer het opnieuw.";
 }
 
+// What can put a notification in the queue on the server. The Edge Function "push" sends the queue when it is asked to
+// (the old site asks the same way); calls close together become one, at most every 5 seconds.
+const PUSH_AFTER = new Set(["book_session", "book_series", "series_stop", "respond_booking", "reward_session", "mark_no_show", "cancel_booking",
+  "move_booking", "class_signup", "class_cancel", "class_cancel_class", "class_mark", "class_finish", "class_create", "chat_send", "push_test", "request_pack", "set_trainer_available"]);
+let lastFlush = 0;
+let flushTimer: ReturnType<typeof setTimeout> | undefined;
+export function flushPush() {
+  clearTimeout(flushTimer);
+  flushTimer = setTimeout(() => {
+    lastFlush = Date.now();
+    void fetch(`${SUPABASE_URL}/functions/v1/push/flush`, { method: "POST", headers: { apikey: SUPABASE_KEY }, keepalive: true }).catch(() => {});
+  }, Math.max(300, lastFlush + 5000 - Date.now()));
+}
+/** First time ever: the Edge Function makes the key pair for notifications. Returns the public key, or null. */
+export async function pushSetup(): Promise<string | null> {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/push/setup`, { method: "POST", headers: { apikey: SUPABASE_KEY } }).catch(() => null);
+  const body = res?.ok ? await res.json().catch(() => ({})) : {};
+  return body.publicKey || null;
+}
+
 /** Call a database function. Throws an Error with a message a person can read. */
 export async function call<T = unknown>(fn: string, args: Record<string, unknown> = {}): Promise<T> {
   const { data, error } = await supabase.rpc(fn, args);
   if (error) throw new Error(friendly(error));
+  if (PUSH_AFTER.has(fn)) flushPush();
   return data as T;
 }

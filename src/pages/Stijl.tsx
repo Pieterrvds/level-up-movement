@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CalendarDays, Plus, Inbox } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Avatar, Badge, Button, Card, CardHead, Chip, Empty, Field, List, ListRow, Notice, Page, PasswordField, Progress, Sheet, Stat, Switch, Tabs } from "../ui";
+import { Avatar, Badge, Button, Card, CardHead, Chip, Empty, Field, Figures, List, ListRow, Notice, Page, PasswordField, Progress, Sheet, Stat, Switch, Tabs } from "../ui";
 
 const SWATCHES: [string, string, string][] = [
   ["bg-canvas", "Achtergrond", "#F5F6F2"], ["bg-surface", "Kaart", "#FFFFFF"], ["bg-sunken", "Verzonken", "#ECEEE8"],
@@ -98,8 +98,9 @@ export default function Stijl() {
       <Card>
         <CardHead title="Cijfers, labels en meldingen" />
         <div className="grid grid-cols-3 gap-2">
-          <Stat value="18" label="sessies" /><Stat value="€ 50" label="per uur" /><Stat value="4" label="weken reeks" />
+          <Stat value="18" label="sessies" /><Stat value="6" label="deze week" /><Stat value="4" label="weken reeks" />
         </div>
+        <div className="mt-4"><Figures rows={[{ label: "Tegoed", value: "€\u00a01.240,50", strong: true }, { label: "Al uitbetaald", value: "€\u00a0860" }]} /></div>
         <div className="mt-4"><Progress value={1340} max={1500} label="Level 6" note="1340 / 1500 XP" /></div>
         <div className="mt-4 flex flex-wrap gap-2">
           <Badge>Neutraal</Badge><Badge tone="accent">Bevestigd</Badge><Badge tone="warn">Wacht</Badge><Badge tone="danger">Geannuleerd</Badge>
