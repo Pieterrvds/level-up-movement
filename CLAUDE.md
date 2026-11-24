@@ -14,6 +14,18 @@ databankfuncties). Dit is een eigen repository (`Pieterrvds/level-up-movement`).
   op `main`; `npm run build` schrijft de site naar `dist/` (niet in git) en `scripts/publish.sh` bouwt en zet `dist/`
   op `gh-pages`.
 
+## Voor wie: breder dan personal training
+
+De coaches op het platform zijn heel verschillend: personal trainers, yoga, massage, kinesisten, diëtisten, dans,
+workshops, Hyrox, boksen, judo, revalidatie … Ze boeken een plaats in de grote zaal of geven hun sessie waar ze
+willen; het platform verbindt hen met klanten. Gevolgen voor alles wat gebouwd wordt:
+
+- Zeg **coach** en **sessie** (of les, afspraak), nooit "personal trainer" of "training" als algemeen woord.
+- **Wat** iemand geeft, komt altijd uit de gegevens (het label op de uren van de coach, de soorten les), nooit uit
+  een vaste lijst in de code. Uren zonder label heten "Personal training" (`NO_KIND`), zoals op de oude site.
+- De **plaats** is even belangrijk als het uur: toon ze overal waar een sessie staat.
+- Bouw niets dat alleen voor sport klopt (bv. vaste sportwoorden in knoppen of lege schermen).
+
 ## Kaart van de code
 
 - `src/index.css`: alle kleuren, het lettertype en de rondingen als tokens (`@theme`).
@@ -73,12 +85,27 @@ databankfuncties). Dit is een eigen repository (`Pieterrvds/level-up-movement`).
     wachtwoord vergeten en de pagina Stijl.
   - De oude en de nieuwe site staan op hetzelfde domein en delen dus de login van Supabase: wie op de ene inlogt,
     is het ook op de andere.
-- **Volgende: stap 2**, de klant: Start (volgende sessie, coaches) en een sessie boeken.
-- **Pieter moet nog:** in Supabase → Authentication → URL Configuration het adres
-  `https://pieterrvds.github.io/level-up-movement/` toevoegen bij "Redirect URLs". Tot dan komen de links uit de
-  bevestigingsmail en uit "wachtwoord vergeten" uit op de oude site.
+- **Stap 2 klaar (24 november 2026):** de klant ziet zijn start en vraagt een sessie aan.
+  - `src/lib/booking.tsx`: `useBooking()` laadt één keer de coaches (`trainer_list`), hun uren
+    (`trainer_hours_list`), wat bezet is (`slot_status`) en de prijzen (`pricing_info`), en rekent uit welke uren
+    vrij zijn. Dezelfde regels als de server (`_book`): open uren min gesloten dagen, coach actief, minstens 12 uur
+    vooraf, hoogstens 4 weken vooruit, niet bezet, en de zaal niet vol als de sessie in de grote zaal is.
+    `quote()` zegt wat het kost: met een pakket, gratis eerste sessie, of de prijs van de coach.
+  - `src/pages/Start.tsx`: volgende sessie (wat, met wie, wanneer, waar, status), vooruitgang, de coaches (actief
+    en met vrije uren eerst). `src/pages/Boeken.tsx`: 1. lijst van coaches met een rij "soorten" om te filteren,
+    2. een coach: dag kiezen, dan een uur (per soort en plaats), 3. venster "Sessie aanvragen" (`book_session`,
+    betalen ter plaatse). Het gekozen uur staat in het adres (`?dag=…&uur=…`) en telt alleen voor die dag.
+  - `src/pages/Gezondheid.tsx`: de acht gezondheidsvragen (`save_health_form`), verplicht voor een eerste sessie
+    en na een jaar opnieuw; daarna keert de klant terug naar het gekozen uur.
+  - `friendly()` vertaalt de Engelse antwoorden van de databank bij het boeken naar het Nederlands.
+  - De foto en titel van de eerste drie coaches stonden in de code van de oude site; `FIRST` in `booking.tsx` vult
+    ze in tot hun kaart in de databank is aangepast (Admin → Team → Edit op de oude site).
+  - **Nog niet in de nieuwe app** (wel op de oude site): een vaste wekelijkse sessie, een duosessie, een gratis
+    beurt van de spaarkaart inzetten, een pakket aanvragen, en de mail die de oude site bij een aanvraag via een
+    externe dienst stuurt. De melding aan de coach doet de server zelf.
+- **Volgende: stap 3**, de klant: mijn sessies (verplaatsen, annuleren, in de agenda zetten) en het profiel.
 - **Getest** (Playwright, 390, 360 en 1280 px) tegen een nagebouwde Supabase met de echte `schema.sql`: 42
-  controles van stap 1. **Niet getest:** de echte Supabase, echte mails (bevestigen, wachtwoord vergeten), echte
-  telefoons en Safari.
+  controles van stap 1 en 37 van stap 2. **Niet getest:** de echte Supabase, echte mails (bevestigen, wachtwoord
+  vergeten), echte meldingen, echte telefoons en Safari.
 - **Nog te beslissen:** wat een bezoeker ziet vóór hij inlogt (nu meteen het inlogscherm; de oude site heeft een
   homepage met uitleg en coaches), en waar de privacytekst komt (de link wijst nu naar de oude site).

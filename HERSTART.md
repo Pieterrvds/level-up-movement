@@ -5,6 +5,9 @@ en gefilterd. De oude site (`Pieterrvds/LEVEL-UP-`) blijft live tot deze klaar i
 
 ## 1. Beslist (november 2026)
 
+- **Breder dan personal training.** Coaches zijn ook yogaleraars, masseurs, kinesisten, diëtisten, dansleraars …
+  Het platform verbindt hen met klanten en met een plaats (de grote zaal of waar zij willen). Zie `CLAUDE.md`,
+  "Voor wie".
 - **Databank blijft.** Zelfde Supabase-project, zelfde functies (`supabase/schema.sql` in de oude repo). De regels
   voor boeken, zaal, prijzen en meldingen worden niet opnieuw gebouwd. Wie in de oude app een account heeft, logt
   hier met hetzelfde account in.
@@ -87,7 +90,7 @@ Eén stap per chat. Aan het einde van elke stap: `CLAUDE.md` bijwerken ("Stand v
 
 0. Project, stijl en bouwstenen, navigatie per rol, voorbeeldschermen. **Klaar.**
 1. Inloggen, account maken, wachtwoord vergeten; de rol komt uit het account (klant, coach, admin). **Klaar.**
-2. Klant: Start en een sessie boeken.
+2. Klant: Start en een sessie boeken. **Klaar** (vaste wekelijkse sessie, duo en pakketten schuiven naar stap 3).
 3. Klant: mijn sessies en profiel.
 4. Coach: Vandaag, Agenda en uren.
 5. Groepslessen (klant en coach).

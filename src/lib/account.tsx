@@ -14,7 +14,15 @@ export type Player = {
   trainerId: string | null;
   admin: boolean;
   createdAt: string;
+  /** true until the first session that counts: the first one has its own price (free today) */
+  introEligible?: boolean;
+  /** the health questions: asked before a first session and again after a year */
+  healthForm?: { valid: boolean; hasRisk: boolean; answers: Record<string, boolean>; notes: string } | null;
+  packs?: { status: string; remaining: number }[];
+  bookings: Booking[];
 };
+/** A session of this person with a coach, as the server gives it (`_booking_json`) */
+export type Booking = { id: string; trainerId: string; date: string; hour: number; status: string; what: string | null; place: string | null; price: number };
 
 type Status = "loading" | "visitor" | "in";
 type Account = {
@@ -63,7 +71,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     try {
       const data = await call<Player | null>("my_data");
       if (!data) throw new Error("Je account werd niet gevonden.");
-      setPlayer({ ...data, xp: Number(data.xp) || 0, admin: Boolean(data.admin), trainerId: data.trainerId || null });
+      setPlayer({ ...data, xp: Number(data.xp) || 0, admin: Boolean(data.admin), trainerId: data.trainerId || null,
+        bookings: (data.bookings || []).map((b) => ({ ...b, hour: Number(b.hour), price: Number(b.price) })) });
       setError("");
     } catch (err) {
       setError(friendly(err));

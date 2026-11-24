@@ -74,6 +74,29 @@ export function PasswordField(props: Omit<FieldProps, "type" | "trail">) {
   );
 }
 
+/** A few lines of free text */
+export function TextArea({ label, hint, className, id, ...rest }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; hint?: string }) {
+  const auto = useId();
+  const fid = id || auto;
+  return (
+    <div className={className}>
+      <label htmlFor={fid} className="mb-1.5 block text-sm font-medium">{label}</label>
+      <textarea id={fid} rows={3} {...rest} aria-describedby={hint ? `${fid}-note` : undefined}
+        className="block w-full rounded-field border border-line bg-surface px-4 py-3 text-base text-ink placeholder:text-faint focus:outline-2 focus:outline-offset-0 focus:outline-accent-ink" />
+      {hint && <p id={`${fid}-note`} className="mt-1.5 text-sm text-muted">{hint}</p>}
+    </div>
+  );
+}
+/** A box to tick, with its sentence next to it */
+export function Check({ checked, onChange, children }: { checked: boolean; onChange: (on: boolean) => void; children: ReactNode }) {
+  return (
+    <label className="flex cursor-pointer items-start gap-3">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-brand" />
+      <span className="text-sm">{children}</span>
+    </label>
+  );
+}
+
 /* ---------- Tabs: one row that only slides sideways ---------- */
 export function Tabs<T extends string>({ tabs, value, onChange, label }: { tabs: { id: T; label: string; count?: number }[]; value: T; onChange: (id: T) => void; label: string }) {
   return (
