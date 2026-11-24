@@ -86,7 +86,7 @@ teruggeeft voor je een scherm bouwt; niets raden.
 Eén stap per chat. Aan het einde van elke stap: `CLAUDE.md` bijwerken ("Stand van zaken").
 
 0. Project, stijl en bouwstenen, navigatie per rol, voorbeeldschermen. **Klaar.**
-1. Inloggen, account maken, wachtwoord vergeten; de rol komt uit het account (klant, coach, admin).
+1. Inloggen, account maken, wachtwoord vergeten; de rol komt uit het account (klant, coach, admin). **Klaar.**
 2. Klant: Start en een sessie boeken.
 3. Klant: mijn sessies en profiel.
 4. Coach: Vandaag, Agenda en uren.
@@ -99,5 +99,7 @@ Eén stap per chat. Aan het einde van elke stap: `CLAUDE.md` bijwerken ("Stand v
 ## 6. Nog te beslissen door Pieter
 
 - Blijft Engels nodig?
+- Wat ziet een bezoeker vóór hij inlogt: meteen het inlogscherm (nu), of eerst een pagina met uitleg en de coaches?
+- De privacytekst: nu een link naar de oude site.
 - Shop, frigo, posts en mascotte: komen ze terug in stap 8, en welke?
 - Het logo: nu een eenvoudig teken met dubbele pijl; het echte logo kan het vervangen.

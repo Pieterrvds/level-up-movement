@@ -8,7 +8,7 @@ export default function Later({ title, text, step }: { title: string; text: stri
     <Page title={title}>
       <Card pad={false}>
         <Empty icon={<Hammer size={22} />} title={step ? `Komt in ${step}` : title} text={text}
-          action={<Link to="/stijl" className="text-sm font-semibold text-accent-ink underline underline-offset-4">Bekijk de stijl en de bouwstenen</Link>} />
+          action={<Link to="/" className="text-sm font-semibold text-accent-ink underline underline-offset-4">Terug naar start</Link>} />
       </Card>
     </Page>
   );

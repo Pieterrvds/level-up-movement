@@ -57,9 +57,28 @@ databankfuncties). Dit is een eigen repository (`Pieterrvds/level-up-movement`).
 
 ## Stand van zaken
 
-- **Stap 0 klaar (24 november 2026):** project, tokens, bouwstenen, navigatie per rol, pagina Stijl, drie
-  voorbeeldschermen (klant, coach, admin) met verzonnen gegevens. De rol kies je nu op de pagina Stijl; ze wordt op
-  het toestel bewaard (`lum.voorbeeldrol`).
-- **Volgende: stap 1**, inloggen en account maken met Supabase Auth; de rol komt dan uit het account
-  (`my_data`: is er een trainerkaart gekoppeld, is het een admin) en de keuze op de pagina Stijl vervalt.
-- Nog niet getest: echte telefoons en Safari. Er is nog geen verbinding met Supabase.
+- **Stap 0 klaar (24 november 2026):** project, tokens, bouwstenen, navigatie per rol, pagina Stijl en drie
+  voorbeeldschermen met verzonnen gegevens (`/stijl/klant`, `/stijl/coach`, `/stijl/admin`): die tonen hoe Start,
+  Vandaag en Overzicht bedoeld zijn en blijven als voorbeeld staan tot de echte schermen er zijn.
+- **Stap 1 klaar (24 november 2026):** inloggen, account maken (met bevestiging per mail en "stuur opnieuw"),
+  wachtwoord vergeten en een nieuw wachtwoord kiezen via de link uit de mail, uitloggen.
+  - `src/lib/supabase.ts`: de verbinding, `call(fn, args)` voor databankfuncties en `friendly()` (foutmeldingen in
+    het Nederlands). `mailReturn` leest wat een link uit een mail meebracht (Supabase zet dat na de `#`, waar ook
+    onze schermen staan), vóór de router het adres ziet.
+  - `src/lib/account.tsx`: `useAccount()` geeft de status (`loading`, `visitor`, `in`), het account (`my_data`), de
+    rollen en de acties. De rol komt uit het account: trainerkaart gekoppeld = coach, in `admin_emails` = admin,
+    anders klant. Wie coach én admin is, kiest de weergave op zijn profiel (bewaard op het toestel, `lum.weergave`).
+  - `src/pages/Toegang.tsx` (de vier schermen), `Start.tsx` (begroeting; voor een klant zijn echte XP en level),
+    `Profiel.tsx` (naam, adres, rol, weergave, uitloggen). Een bezoeker ziet alleen inloggen, account maken,
+    wachtwoord vergeten en de pagina Stijl.
+  - De oude en de nieuwe site staan op hetzelfde domein en delen dus de login van Supabase: wie op de ene inlogt,
+    is het ook op de andere.
+- **Volgende: stap 2**, de klant: Start (volgende sessie, coaches) en een sessie boeken.
+- **Pieter moet nog:** in Supabase → Authentication → URL Configuration het adres
+  `https://pieterrvds.github.io/level-up-movement/` toevoegen bij "Redirect URLs". Tot dan komen de links uit de
+  bevestigingsmail en uit "wachtwoord vergeten" uit op de oude site.
+- **Getest** (Playwright, 390, 360 en 1280 px) tegen een nagebouwde Supabase met de echte `schema.sql`: 42
+  controles van stap 1. **Niet getest:** de echte Supabase, echte mails (bevestigen, wachtwoord vergeten), echte
+  telefoons en Safari.
+- **Nog te beslissen:** wat een bezoeker ziet vóór hij inlogt (nu meteen het inlogscherm; de oude site heeft een
+  homepage met uitleg en coaches), en waar de privacytekst komt (de link wijst nu naar de oude site).

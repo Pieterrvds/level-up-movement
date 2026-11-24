@@ -1,7 +1,6 @@
 // The frame around every screen: on a phone a slim bar on top and four buttons at the bottom,
 // on a computer the same four in a column on the left.
 import { NavLink, Outlet } from "react-router-dom";
-import { Bell } from "lucide-react";
 import { NAV } from "../nav";
 import type { Role } from "../nav";
 
@@ -35,13 +34,11 @@ export default function AppShell({ role }: { role: Role }) {
             </NavLink>
           ))}
         </nav>
-        <NavLink to="/stijl" className="mt-auto rounded-field px-3 py-2 text-sm text-faint hover:text-ink">Stijl en bouwstenen</NavLink>
       </aside>
 
       {/* phone: the bar on top */}
-      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-line bg-canvas/90 px-4 backdrop-blur sm:hidden">
+      <header className="sticky top-0 z-20 flex h-14 items-center border-b border-line bg-canvas/90 px-4 backdrop-blur sm:hidden">
         <Logo />
-        <button type="button" aria-label="Meldingen" className="grid h-10 w-10 place-items-center rounded-full text-ink hover:bg-sunken"><Bell size={20} /></button>
       </header>
 
       <main className="pb-24 sm:pb-0"><Outlet /></main>
@@ -58,6 +55,16 @@ export default function AppShell({ role }: { role: Role }) {
           </NavLink>
         ))}
       </nav>
+    </div>
+  );
+}
+
+/** The frame of the screens before you are logged in (and of the few that stand alone): the logo and one calm column */
+export function Bare({ wide }: { wide?: boolean }) {
+  return (
+    <div className="min-h-dvh">
+      <header className="flex h-16 items-center px-4 sm:px-8"><Logo /></header>
+      <main className={wide ? "" : "mx-auto w-full max-w-md px-4 pt-4 pb-12 sm:pt-10"}><Outlet /></main>
     </div>
   );
 }

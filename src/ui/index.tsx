@@ -1,8 +1,8 @@
 // The building blocks of LEVEL-UP movement. Every screen is made of these; a screen never styles a button, card
 // or field itself. A new block is added here first (and shown on the "Stijl" page), then used.
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
-import { ChevronRight, X } from "lucide-react";
+import { ChevronRight, Eye, EyeOff, X } from "lucide-react";
 
 const cx = (...parts: (string | false | null | undefined)[]) => parts.filter(Boolean).join(" ");
 
@@ -47,18 +47,30 @@ export function CardHead({ title, hint, action }: { title: string; hint?: string
 }
 
 /* ---------- Field ---------- */
-type FieldProps = InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string; error?: string };
-export function Field({ label, hint, error, className, id, ...rest }: FieldProps) {
+type FieldProps = InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string; error?: string; trail?: ReactNode };
+export function Field({ label, hint, error, className, id, trail, ...rest }: FieldProps) {
   const auto = useId();
   const fid = id || auto;
   return (
     <div className={className}>
       <label htmlFor={fid} className="mb-1.5 block text-sm font-medium">{label}</label>
-      <input id={fid} {...rest} aria-invalid={Boolean(error)} aria-describedby={error || hint ? `${fid}-note` : undefined}
-        className={cx("h-12 w-full rounded-field border bg-surface px-4 text-base text-ink placeholder:text-faint",
-          "focus:outline-2 focus:outline-offset-0 focus:outline-accent-ink", error ? "border-danger" : "border-line")} />
+      <div className="relative">
+        <input id={fid} {...rest} aria-invalid={Boolean(error)} aria-describedby={error || hint ? `${fid}-note` : undefined}
+          className={cx("h-12 w-full rounded-field border bg-surface px-4 text-base text-ink placeholder:text-faint",
+            "focus:outline-2 focus:outline-offset-0 focus:outline-accent-ink", error ? "border-danger" : "border-line", trail ? "pr-12" : false)} />
+        {trail && <span className="absolute inset-y-0 right-1 grid place-items-center">{trail}</span>}
+      </div>
       {(error || hint) && <p id={`${fid}-note`} className={cx("mt-1.5 text-sm", error ? "text-danger" : "text-muted")}>{error || hint}</p>}
     </div>
+  );
+}
+/** A password, with an eye to read what you typed */
+export function PasswordField(props: Omit<FieldProps, "type" | "trail">) {
+  const [shown, setShown] = useState(false);
+  return (
+    <Field {...props} type={shown ? "text" : "password"}
+      trail={<button type="button" onClick={() => setShown(!shown)} aria-label={shown ? "Verberg het wachtwoord" : "Toon het wachtwoord"} aria-pressed={shown}
+        className="grid h-10 w-10 place-items-center rounded-full text-muted hover:bg-sunken">{shown ? <EyeOff size={20} /> : <Eye size={20} />}</button>} />
   );
 }
 

@@ -2,9 +2,8 @@
 // everywhere, it changes here (src/ui and the tokens in src/index.css), never on one screen.
 import { useState } from "react";
 import { CalendarDays, Plus, Inbox } from "lucide-react";
-import { Avatar, Badge, Button, Card, CardHead, Chip, Empty, Field, List, ListRow, Notice, Page, Progress, Sheet, Stat, Switch, Tabs } from "../ui";
-import { ROLE_LABEL } from "../nav";
-import type { Role } from "../nav";
+import { useNavigate } from "react-router-dom";
+import { Avatar, Badge, Button, Card, CardHead, Chip, Empty, Field, List, ListRow, Notice, Page, PasswordField, Progress, Sheet, Stat, Switch, Tabs } from "../ui";
 
 const SWATCHES: [string, string, string][] = [
   ["bg-canvas", "Achtergrond", "#F5F6F2"], ["bg-surface", "Kaart", "#FFFFFF"], ["bg-sunken", "Verzonken", "#ECEEE8"],
@@ -12,17 +11,22 @@ const SWATCHES: [string, string, string][] = [
   ["bg-accent-soft", "Accent zacht", "#E1F5EA"], ["bg-warn-soft", "Let op", "#FBEFD9"], ["bg-danger-soft", "Fout", "#FBE8E6"],
 ];
 
-export default function Stijl({ role, onRole }: { role: Role; onRole: (r: Role) => void }) {
+export default function Stijl() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState<"komend" | "voorbij" | "geannuleerd">("komend");
   const [hour, setHour] = useState("10:00");
   const [on, setOn] = useState(true);
   const [sheet, setSheet] = useState(false);
   return (
     <Page title="Stijl" text="De bouwstenen waarmee elk scherm gemaakt wordt.">
-      <Card>
-        <CardHead title="Bekijk de app als" hint="Elke rol heeft zijn eigen vier knoppen in de navigatie." />
-        <Tabs label="Rol" value={role} onChange={onRole} tabs={(Object.keys(ROLE_LABEL) as Role[]).map((id) => ({ id, label: ROLE_LABEL[id] }))} />
-      </Card>
+      <div>
+        <h2 className="mb-2 px-1 text-lg font-semibold">Voorbeeldschermen</h2>
+        <List>
+          <ListRow title="Start van een klant" text="Met verzonnen gegevens" onClick={() => navigate("/stijl/klant")} />
+          <ListRow title="Vandaag van een coach" text="Met verzonnen gegevens" onClick={() => navigate("/stijl/coach")} />
+          <ListRow title="Overzicht van de beheerder" text="Met verzonnen gegevens" onClick={() => navigate("/stijl/admin")} />
+        </List>
+      </div>
 
       <Card>
         <CardHead title="Kleuren" hint="Eén accentkleur. Groen betekent: actief, vooruitgang of gekozen." />
@@ -73,7 +77,7 @@ export default function Stijl({ role, onRole }: { role: Role; onRole: (r: Role) 
         <CardHead title="Invoervelden" />
         <div className="grid gap-4">
           <Field label="E-mailadres" type="email" placeholder="naam@voorbeeld.be" autoComplete="off" />
-          <Field label="Wachtwoord" type="password" hint="Minstens 8 tekens." autoComplete="off" />
+          <PasswordField label="Wachtwoord" hint="Minstens 8 tekens." autoComplete="off" />
           <Field label="Geboortedatum" defaultValue="32/13/2000" error="Vul een bestaande datum in." />
           <div className="flex items-center justify-between gap-4">
             <div><p className="font-medium">Meldingen van de chat</p><p className="text-sm text-muted">Een melding bij elk nieuw bericht.</p></div>
