@@ -100,12 +100,27 @@ willen; het platform verbindt hen met klanten. Gevolgen voor alles wat gebouwd w
   - `friendly()` vertaalt de Engelse antwoorden van de databank bij het boeken naar het Nederlands.
   - De foto en titel van de eerste drie coaches stonden in de code van de oude site; `FIRST` in `booking.tsx` vult
     ze in tot hun kaart in de databank is aangepast (Admin → Team → Edit op de oude site).
-  - **Nog niet in de nieuwe app** (wel op de oude site): een vaste wekelijkse sessie, een duosessie, een gratis
-    beurt van de spaarkaart inzetten, een pakket aanvragen, en de mail die de oude site bij een aanvraag via een
-    externe dienst stuurt. De melding aan de coach doet de server zelf.
-- **Volgende: stap 3**, de klant: mijn sessies (verplaatsen, annuleren, in de agenda zetten) en het profiel.
+- **Stap 3 klaar (24 november 2026):** mijn sessies, wekelijkse sessies, pakketten en het profiel.
+  - `src/pages/Sessies.tsx` (`/sessies`): Komend en Voorbij. Een sessie opent in een venster: "Zet in mijn agenda"
+    (een .ics-bestand, `calendarFile` in `lib/dates.ts`) en "Annuleren" (`cancel_booking`, altijd met een tweede
+    tik). Na `freeCancelUntil` zegt het venster dat een bevestigde sessie aangerekend wordt. Een klant kan niet
+    zelf verplaatsen: `move_booking` is op de server alleen voor de coach; hij annuleert en boekt opnieuw.
+  - Wekelijks: in het venster "Sessie aanvragen" kiest de klant "Eén keer" of "Elke week" (`book_series`, zonder
+    einddatum). In "Mijn sessies" staat ze bovenaan met "Stoppen" (`series_stop`).
+  - `src/pages/Profiel.tsx`: foto (vierkant gemaakt, bucket `avatars`, `set_avatar`), vooruitgang, pakketten
+    (`request_pack`, `cancel_pack_request`; een betaald pakket telt vanzelf bij het boeken), en instellingen:
+    gezondheidsvragen, geboortedag (`set_birthday`), wachtwoord wijzigen, uitloggen, account verwijderen
+    (`delete_my_account`, met een tweede tik).
+  - `ListRow` heeft `below`: iets onder de twee regels, voor een label dat te breed is om ernaast te staan.
+  - Geleerd: na een geslaagde aanvraag mag niets het adres nog wijzigen (`leaving` in `Boeken.tsx`); het sluitende
+    venster schreef anders soms over de stap naar Start heen.
+  - **Nog niet in de nieuwe app** (wel op de oude site): een duosessie, een gratis beurt van de spaarkaart
+    inzetten, je naam wijzigen (de server heeft daar geen functie voor), en de mail die de oude site bij een
+    aanvraag via een externe dienst stuurt. De melding aan de coach doet de server zelf.
+- **Volgende: stap 4**, de coach: Vandaag (actief of afwezig, te doen, de dag), Agenda en uren.
 - **Getest** (Playwright, 390, 360 en 1280 px) tegen een nagebouwde Supabase met de echte `schema.sql`: 42
-  controles van stap 1 en 37 van stap 2. **Niet getest:** de echte Supabase, echte mails (bevestigen, wachtwoord
-  vergeten), echte meldingen, echte telefoons en Safari.
+  controles van stap 1, 37 van stap 2 en 36 van stap 3. De tests staan niet in de repository (tijdelijke map van
+  de sessie). **Niet getest:** de echte Supabase, echte mails, echte meldingen, het echte opladen van een foto,
+  het agendabestand op een telefoon, echte telefoons en Safari.
 - **Nog te beslissen:** wat een bezoeker ziet vóór hij inlogt (nu meteen het inlogscherm; de oude site heeft een
   homepage met uitleg en coaches), en waar de privacytekst komt (de link wijst nu naar de oude site).

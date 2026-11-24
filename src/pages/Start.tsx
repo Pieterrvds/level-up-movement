@@ -49,7 +49,10 @@ function Klant() {
             <li className="flex items-start gap-2.5"><MapPin size={18} className="mt-0.5 shrink-0" aria-hidden /> {b.place || data.pricing.place}</li>
           </ul>
           {next.length > 1 && <p className="mt-3 text-sm text-muted">En nog {next.length - 1} {next.length === 2 ? "andere sessie" : "andere sessies"} gepland.</p>}
-          <div className="mt-5"><Link to="/boeken" className="contents"><Button>Nog een sessie boeken</Button></Link></div>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Link to="/boeken" className="contents"><Button>Nog een sessie boeken</Button></Link>
+            <Link to="/sessies" className="contents"><Button variant="secondary">Mijn sessies</Button></Link>
+          </div>
         </Card>
       ) : (
         <Card pad={false}>

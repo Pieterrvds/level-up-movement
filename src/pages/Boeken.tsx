@@ -1,14 +1,14 @@
 // Booking a session, in three calm steps: 1. what and with whom (this list), 2. a day and an hour (the coach's
 // screen), 3. confirm (the window). Group classes join in step 5.
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, CalendarDays, CalendarX, Clock, MapPin } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Avatar, Badge, Button, Card, Chip, Empty, List, ListRow, Notice, Page, Sheet, TextArea } from "../ui";
+import { Avatar, Badge, Button, Card, Chip, Empty, List, ListRow, Notice, Page, Sheet, Tabs, TextArea } from "../ui";
 import { useAccount } from "../lib/account";
 import { useBooking, quote } from "../lib/booking";
 import type { Slot } from "../lib/booking";
 import { call, friendly } from "../lib/supabase";
-import { dayParts, hourSpan, hourText, longDay } from "../lib/dates";
+import { dayParts, everyWeekday, hourSpan, hourText, isoWeekday, longDay } from "../lib/dates";
 
 const Loading = () => <Card pad={false}><Empty title="Even laden…" /></Card>;
 
@@ -62,9 +62,16 @@ export function BoekenCoach() {
   // picked any more, never the same hour on another day
   const picked = (params.get("dag") === day && list.find((s) => s.state === "free" && String(s.hour) === params.get("uur"))) || null;
   const [note, setNote] = useState("");
+  const [often, setOften] = useState<"once" | "weekly">("once");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const set = (next: Record<string, string>) => { const q = new URLSearchParams(params); Object.entries(next).forEach(([k, v]) => (v ? q.set(k, v) : q.delete(k))); setParams(q, { replace: true }); };
+  // once a session is asked for we are on our way to the start screen: nothing may change the address any more
+  // (the window closing would otherwise write "no hour chosen" over the move to the start screen)
+  const leaving = useRef(false);
+  const set = (next: Record<string, string>) => {
+    if (leaving.current) return;
+    const q = new URLSearchParams(params); Object.entries(next).forEach(([k, v]) => (v ? q.set(k, v) : q.delete(k))); setParams(q, { replace: true });
+  };
 
   // the health questions come first (asked once a year): go there with the chosen hour, and come back to it
   const needsHealth = Boolean(picked) && !player?.healthForm?.valid;
@@ -82,9 +89,12 @@ export function BoekenCoach() {
   const ask = async (slot: Slot) => {
     setBusy(true); setError("");
     try {
-      await call("book_session", { p_trainer: id, p_day: slot.day, p_hour: slot.hour, p_note: note.trim().slice(0, 300), p_kind: "solo", p_partner: "", p_pay: "in_person" });
+      const text = note.trim().slice(0, 300);
+      if (often === "weekly") await call("book_series", { p_trainer: id, p_day: slot.day, p_hour: slot.hour, p_weeks: null, p_note: text, p_kind: "solo", p_partner: "" });
+      else await call("book_session", { p_trainer: id, p_day: slot.day, p_hour: slot.hour, p_note: text, p_kind: "solo", p_partner: "", p_pay: "in_person" });
+      leaving.current = true;
       await Promise.all([reload(), data.reload()]);
-      navigate("/", { state: { flash: `Aangevraagd. ${coach.short} bevestigt je sessie; je ziet het hier.` } });
+      navigate("/", { state: { flash: often === "weekly" ? `Aangevraagd. ${coach.short} bevestigt je wekelijkse sessie; je ziet het hier.` : `Aangevraagd. ${coach.short} bevestigt je sessie; je ziet het hier.` } });
     } catch (err) {
       setError(friendly(err));
       set({ uur: "" }); // the window closes; the reason stands on the screen
@@ -135,8 +145,8 @@ export function BoekenCoach() {
           </Card>
         </>)}
 
-      <Sheet open={Boolean(picked) && !needsHealth} onClose={() => set({ uur: "" })} title="Sessie aanvragen"
-        footer={picked && <Button block size="lg" disabled={busy} onClick={() => void ask(picked)}>{busy ? "Bezig…" : "Vraag deze sessie aan"}</Button>}>
+      <Sheet open={Boolean(picked) && !needsHealth} onClose={() => { set({ uur: "" }); setOften("once"); }} title="Sessie aanvragen"
+        footer={picked && <Button block size="lg" disabled={busy} onClick={() => void ask(picked)}>{busy ? "Bezig…" : often === "weekly" ? "Vraag elke week aan" : "Vraag deze sessie aan"}</Button>}>
         {picked && (<>
           <p className="text-2xl font-semibold tracking-tight">{picked.what} met {coach.short}</p>
           <ul className="mt-3 grid gap-2 text-[15px] text-muted">
@@ -146,6 +156,10 @@ export function BoekenCoach() {
           </ul>
           <div className="mt-4 flex items-baseline justify-between gap-3 rounded-field bg-sunken px-4 py-3">
             <span className="font-semibold">{price.text}</span>{price.note && <span className="text-right text-sm text-muted">{price.note}</span>}
+          </div>
+          <div className="mt-4">
+            <Tabs label="Hoe vaak" value={often} onChange={setOften} tabs={[{ id: "once", label: "Eén keer" }, { id: "weekly", label: "Elke week" }]} />
+            {often === "weekly" && <p className="mt-2 text-sm text-muted">{`Vanaf deze dag ${everyWeekday(isoWeekday(picked.day))} om ${hourText(picked.hour)}, tot jij of ${coach.short} ze stopt. Elke week wordt apart aangerekend.`}</p>}
           </div>
           <TextArea className="mt-4" label="Iets dat je coach moet weten? (mag leeg blijven)" maxLength={300} rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
           <p className="mt-3 text-sm text-muted">{coach.short} bevestigt je aanvraag. Tot dan staat ze op "wacht op bevestiging".</p>

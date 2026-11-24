@@ -11,6 +11,7 @@ import Profiel from "./pages/Profiel";
 import { AccountMaken, Inloggen, NieuwWachtwoord, WachtwoordVergeten } from "./pages/Toegang";
 import { Boeken, BoekenCoach } from "./pages/Boeken";
 import Gezondheid from "./pages/Gezondheid";
+import Sessies from "./pages/Sessies";
 import { BookingProvider } from "./lib/booking";
 
 // The look and the example screens (made-up data): open to everyone, they are the reference while the app is built
@@ -69,6 +70,7 @@ export default function App() {
         <Route path="boeken" element={<Boeken />} />
         <Route path="boeken/:id" element={<BoekenCoach />} />
         <Route path="gezondheid" element={<Gezondheid />} />
+        <Route path="sessies" element={<Sessies />} />
         <Route path="agenda" element={<Later title="Agenda" step="stap 4" text="Je sessies en groepslessen per dag, en je uren." />} />
         <Route path="team" element={<Later title="Team" step="stap 7" text="Elke trainer met zijn lessen en uren." />} />
         <Route path="chat" element={<Later title="Chat" step="stap 6" text="Berichten met je coach of je klanten." />} />

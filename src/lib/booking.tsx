@@ -14,7 +14,7 @@ export const NO_KIND = "Personal training"; // hours without a label are the cla
 export type Coach = { id: string; name: string; short: string; role: string; bio: string; specialties: string[]; photo: string; available: boolean };
 type HoursRow = { trainerId: string; weekday: number | null; date: string | null; start: number; end: number; kind: string; activity: string; location: string; pending: boolean };
 type Taken = { trainer_id: string; day: string; hour: number; booking_id: string | null; status: string | null };
-export type Pricing = { price: number; introPrice: number; place: string; trainers: Record<string, number> };
+export type Pricing = { price: number; introPrice: number; place: string; trainers: Record<string, number>; packs: { size: number; price: number }[] };
 export type Slot = { coachId: string; day: string; hour: number; what: string; place: string; state: "free" | "mine" | "taken" };
 
 // The first three coaches had their photo and title in the code of the old site, not in the database.
@@ -51,7 +51,7 @@ type Data = {
   reload: () => Promise<void>;
 };
 const Ctx = createContext<Data | null>(null);
-const EMPTY: Pricing = { price: 50, introPrice: 0, place: "Grote zaal, Hoogstraat 40, Hofstade (Aalst)", trainers: {} };
+const EMPTY: Pricing = { price: 50, introPrice: 0, place: "Grote zaal, Hoogstraat 40, Hofstade (Aalst)", trainers: {}, packs: [] };
 
 export function BookingProvider({ children }: { children: ReactNode }) {
   const { player } = useAccount();
@@ -72,7 +72,8 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       setCoaches((list || []).map(toCoach));
       setHours((rows || []).map((r) => ({ ...r, start: Number(r.start), end: Number(r.end), weekday: r.weekday === null ? null : Number(r.weekday) })));
       setTaken((slots || []).map((s) => ({ ...s, hour: Number(s.hour) })));
-      setPricing({ price: Number(prices?.price ?? EMPTY.price), introPrice: Number(prices?.introPrice ?? 0), place: prices?.place || EMPTY.place, trainers: prices?.trainers || {} });
+      setPricing({ price: Number(prices?.price ?? EMPTY.price), introPrice: Number(prices?.introPrice ?? 0), place: prices?.place || EMPTY.place, trainers: prices?.trainers || {},
+        packs: (prices?.packs || []).map((o) => ({ size: Number(o.size), price: Number(o.price) })) });
       setError("");
     } catch (err) {
       setError(friendly(err));
@@ -134,11 +135,12 @@ export function useBooking(): Data {
   return value;
 }
 
+export const euro = (n: number) => `€ ${Number.isInteger(n) ? n : n.toFixed(2).replace(".", ",")}`;
+
 /** What a session costs this person, and why */
 export function quote(player: { introEligible?: boolean; packs?: { status: string; remaining: number }[] } | null, pricing: Pricing, coachId: string) {
   const credits = (player?.packs || []).filter((p) => p.status === "paid" && p.remaining > 0).reduce((n, p) => n + p.remaining, 0);
   if (credits) return { free: true, text: "Met je pakket", note: `Daarna heb je nog ${credits - 1} ${credits - 1 === 1 ? "beurt" : "beurten"}.` };
-  const euro = (n: number) => `€ ${Number.isInteger(n) ? n : n.toFixed(2).replace(".", ",")}`;
   if (player?.introEligible) {
     return pricing.introPrice > 0
       ? { free: false, text: `${euro(pricing.introPrice)} · je eerste sessie`, note: "Betalen doe je ter plaatse." }

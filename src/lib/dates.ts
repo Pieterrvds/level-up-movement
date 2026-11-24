@@ -25,3 +25,25 @@ export function inDays(key: string, now = new Date()) {
   const n = Math.round((parseKey(key).getTime() - new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()) / 86400e3);
   return n <= 0 ? "vandaag" : n === 1 ? "morgen" : `over ${n} dagen`;
 }
+
+const WEEKDAYS = ["maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"];
+/** "elke donderdag" for weekday 1 (Monday) … 7 (Sunday) */
+export const everyWeekday = (weekday: number) => `elke ${WEEKDAYS[(weekday + 6) % 7]}`;
+/** weekday of a day the way the server counts a weekly session: 1 = Monday … 7 = Sunday */
+export const isoWeekday = (key: string) => ((parseKey(key).getDay() + 6) % 7) + 1;
+/** "za 28 nov" */
+export const shortDay = (key: string) => parseKey(key).toLocaleDateString("nl-BE", { weekday: "short", day: "numeric", month: "short" }).replace(/\./g, "");
+
+/** A calendar file (.ics) for one session of an hour, to put in the calendar of the phone or computer */
+export function calendarFile(id: string, title: string, place: string, day: string, hour: number) {
+  const stamp = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+  const text = (v: string) => v.replace(/\\/g, "\\\\").replace(/([,;])/g, "\\$1").replace(/\n/g, "\\n");
+  const start = slotStart(day, hour), end = slotStart(day, hour + 1);
+  const body = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//LEVEL-UP movement//NL", "BEGIN:VEVENT", `UID:${id}@level-up-movement`, `DTSTAMP:${stamp(new Date())}`,
+    `DTSTART:${stamp(start)}`, `DTEND:${stamp(end)}`, `SUMMARY:${text(title)}`, `LOCATION:${text(place)}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(new Blob([body], { type: "text/calendar" }));
+  link.download = "level-up-sessie.ics";
+  document.body.appendChild(link); link.click(); link.remove();
+  setTimeout(() => URL.revokeObjectURL(link.href), 4000);
+}

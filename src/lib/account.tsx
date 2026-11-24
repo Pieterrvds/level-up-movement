@@ -18,11 +18,26 @@ export type Player = {
   introEligible?: boolean;
   /** the health questions: asked before a first session and again after a year */
   healthForm?: { valid: boolean; hasRisk: boolean; answers: Record<string, boolean>; notes: string } | null;
-  packs?: { status: string; remaining: number }[];
+  /** packs of sessions: asked for ("requested") or paid, with what is left */
+  packs?: Pack[];
+  /** the same hour every week with one coach: asked for ("requested"), running ("active") or stopped ("ended") */
+  series?: Series[];
+  /** "MM-DD", or empty */
+  birthday?: string | null;
   bookings: Booking[];
 };
+export type Pack = { id: string; size: number; price: number; status: string; remaining: number };
+/** weekday: 1 = Monday … 7 = Sunday */
+export type Series = { id: string; trainerId: string; weekday: number; hour: number; status: string; lastDay: string | null; upcoming: number };
 /** A session of this person with a coach, as the server gives it (`_booking_json`) */
-export type Booking = { id: string; trainerId: string; date: string; hour: number; status: string; what: string | null; place: string | null; price: number };
+export type Booking = {
+  id: string; trainerId: string; date: string; hour: number; status: string; what: string | null; place: string | null; price: number;
+  /** "paid" or not yet */
+  payStatus?: string;
+  /** until when cancelling a confirmed session costs nothing */
+  freeCancelUntil?: string;
+  series?: { id: string; status: string } | null;
+};
 
 type Status = "loading" | "visitor" | "in";
 type Account = {

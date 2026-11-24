@@ -74,6 +74,17 @@ export function PasswordField(props: Omit<FieldProps, "type" | "trail">) {
   );
 }
 
+/** One choice out of a list (a day, a month) */
+export function Select({ label, className, id, children, ...rest }: React.SelectHTMLAttributes<HTMLSelectElement> & { label: string }) {
+  const auto = useId();
+  const fid = id || auto;
+  return (
+    <div className={className}>
+      <label htmlFor={fid} className="mb-1.5 block text-sm font-medium">{label}</label>
+      <select id={fid} {...rest} className="h-12 w-full rounded-field border border-line bg-surface px-3 text-base text-ink focus:outline-2 focus:outline-offset-0 focus:outline-accent-ink">{children}</select>
+    </div>
+  );
+}
 /** A few lines of free text */
 export function TextArea({ label, hint, className, id, ...rest }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; hint?: string }) {
   const auto = useId();
@@ -144,14 +155,16 @@ export function Avatar({ name, src, size = 44, status }: { name: string; src?: s
 }
 
 /* ---------- ListRow ---------- */
-type RowProps = { lead?: ReactNode; title: string; text?: string; trail?: ReactNode; onClick?: () => void; chevron?: boolean };
-export function ListRow({ lead, title, text, trail, onClick, chevron }: RowProps) {
+/** `below`: something under the two lines (a label that is too wide to stand beside them); the title then wraps instead of being cut */
+type RowProps = { lead?: ReactNode; title: string; text?: string; trail?: ReactNode; below?: ReactNode; onClick?: () => void; chevron?: boolean };
+export function ListRow({ lead, title, text, trail, below, onClick, chevron }: RowProps) {
   const body = (
     <>
       {lead}
       <span className="min-w-0 flex-1 text-left">
-        <span className="block truncate font-semibold">{title}</span>
-        {text && <span className="block truncate text-sm text-muted">{text}</span>}
+        <span className={cx("block font-semibold", !below && "truncate")}>{title}</span>
+        {text && <span className={cx("block text-sm text-muted", !below && "truncate")}>{text}</span>}
+        {below && <span className="mt-1.5 block">{below}</span>}
       </span>
       {trail}
       {(chevron ?? Boolean(onClick)) && <ChevronRight size={18} className="shrink-0 text-faint" aria-hidden />}

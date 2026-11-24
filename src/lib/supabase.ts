@@ -37,6 +37,16 @@ const SERVER: [RegExp, string | ((m: RegExpMatchArray) => string)][] = [
   [/Fill in the health questionnaire/, "Vul eerst de gezondheidsvragen in."],
   [/Type your full name to sign/, "Je naam ontbreekt in je account."],
   [/You answered yes to a question/, "Je antwoordde ja: vertel je coach er wat meer over."],
+  [/This session can no longer be cancelled/, "Deze sessie kan je niet meer annuleren."],
+  [/This session has already started/, "Deze sessie is al begonnen."],
+  [/Booking not found/, "Deze sessie vinden we niet meer."],
+  [/This pack is not available/, "Dit pakket bestaat niet meer."],
+  [/already (asked for|have) a pack|pack request/i, "Je hebt al een pakket aangevraagd."],
+  [/Pick a day and a month/, "Kies een dag en een maand."],
+  [/That day does not exist/, "Die dag bestaat niet."],
+  [/Invalid photo/, "Deze foto konden we niet bewaren."],
+  [/bucket/i, "Foto's opladen staat nog niet aan. Probeer het later opnieuw."],
+  [/first week|is already taken|not free/i, "Dit uur is de eerste week al bezet. Kies een ander uur."],
   [/Log in (first|to book)/, "Log eerst in."],
 ];
 
