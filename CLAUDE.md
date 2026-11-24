@@ -33,6 +33,8 @@ willen; het platform verbindt hen met klanten. Gevolgen voor alles wat gebouwd w
   Figures, Switch, Notice, Empty, Sheet, Count, Bubble, Composer, Page).
 - `src/shell/AppShell.tsx`: het kader: balk bovenaan en vier knoppen onderaan (telefoon), kolom links (computer).
 - `src/nav.ts`: welke vier knoppen elke rol ziet.
+- `src/lib/`: de gegevens per onderdeel: `account.tsx` (wie je bent), `booking.tsx` (coaches, uren, lessen, prijzen),
+  `coach.tsx`, `chat.tsx`, `admin.tsx`, `push.ts`, `supabase.ts` (`call()` en `friendly()`).
 - `src/pages/`: de schermen. `Stijl.tsx` toont alle bouwstenen; `Voorbeeld.tsx` zijn startschermen met verzonnen
   gegevens (verdwijnen als de echte schermen er zijn); `Later.tsx` is de plaatshouder voor wat nog komt.
 
@@ -188,9 +190,37 @@ willen; het platform verbindt hen met klanten. Gevolgen voor alles wat gebouwd w
   - Nog niet: een groepschat verwijderen (beheerder, stap 7), een pop-up bovenaan als er een bericht binnenkomt
     terwijl je op een ander scherm bent (nu alleen het cijfer op de knop Chat), foto's in de chat (bestaat ook op
     de oude site niet), de assistent Levelupy (bewust uitgesteld).
-- **Volgende: stap 7**, de beheerder (admin).
+- **Stap 7 klaar (24 november 2026):** de beheerder (admin).
+  - `src/lib/admin.tsx`: `AdminProvider`/`useAdmin()` laadt alleen voor een admin: leden, alle sessies,
+    sollicitaties, pakketten en prijzen (`admin_data`), de soorten (`training_kinds`), wat coaches wijzigden
+    (`admin_coach_log`) en alle groepslessen (`class_manage_list`, 800 dagen terug voor het geld). Helpers:
+    `adminTodo()` (wat op hem wacht), `toCollect()` (wat ter plaatse nog betaald moet worden, dezelfde regel als de
+    oude admin), `owedTo()` (wat een coach nog krijgt: sessies die tellen en afgeronde lessen zonder uitbetaling;
+    de eigenaar krijgt niets uitbetaald), `thisWeek()`, en `logTitle`/`logDetail` (het logboek komt in het Engels).
+  - `src/pages/Overzicht.tsx` (start van de admin): drie cijfers, "Te doen" (nieuwe soort goedkeuren of weigeren
+    met `admin_kind_decide`, eventueel onder een andere naam; sollicitatie goedkeuren of weigeren met
+    `review_trainer_application`, eventueel gekoppeld aan een kaart zonder account; pakket betaald met
+    `mark_pack_paid`; geld teruggeven met `mark_refunded` / `class_mark_refunded`), het open geld, en de
+    wijzigingen van coaches met "Alles gezien".
+  - `src/pages/Team.tsx`: `/team` (een rij per coach) en `/team/:id` (één coach): actief/afwezig
+    (`set_trainer_available`), kaart aanpassen (`admin_trainer_update`), eigen prijs en vergoeding
+    (`set_trainer_pricing`, leeg = de standaard), uitbetaling noteren (`mark_payout`), wat komt, en zijn uren.
+  - `src/pages/Uren.tsx`: de uren van een coach (elke week, één dag, vrije dag). De coach gebruikt het in zijn
+    Agenda (`own`), de admin op de pagina van een coach; de teksten passen zich aan.
+  - "Meer" (het profiel van de admin) heeft bovenaan Beheer: `Leden.tsx` (`/leden`: zoeken, wat iemand deed,
+    bericht sturen, XP geven met `admin_grant_xp`), `Betalingen.tsx` (`/betalingen`: Te ontvangen met
+    `mark_paid_in_person` en `mark_pack_paid`; Uitbetalen met `mark_payout`) en `Nieuws.tsx` (`/nieuws`: een
+    bericht voor alle leden met `admin_announce`, en het laatste nieuws met verwijderen).
+  - De admin-schermen bestaan alleen voor wie admin is (anders terug naar Start); de server controleert elke
+    actie opnieuw. De app betaalt nooit zelf: "betaald" en "uitbetaald" zijn notities.
+  - Nog niet (wel op de oude site): het weekrooster van het hele team, een groepsles plannen of wijzigen voor
+    een coach, een tweede coach op een les, betalingen per deelnemer van een les, een sessie van een coach
+    bevestigen of afronden als admin, foto en tekst van de soorten, een soort of een groepschat verwijderen,
+    zaalverhuur, de algemene prijzen wijzigen (staan in `app_config`), cadeaus bij pakketten, reviews, en nieuws
+    tonen aan leden in de app (de melding komt wel aan).
+- **Volgende: stap 8**, de extra's die blijven (klassement, nieuws voor leden, shop …).
 - **Getest** (Playwright, 390, 360 en 1280 px) tegen een nagebouwde Supabase met de echte `schema.sql`: 42
-  controles van stap 1, 37 van stap 2, 36 van stap 3, 35 van stap 4, 33 van stap 5, 45 van stap 6 en 12 voor de
+  controles van stap 1, 37 van stap 2, 36 van stap 3, 35 van stap 4, 33 van stap 5, 45 van stap 6, 45 van stap 7 en 12 voor de
   bedragen (ook op 320 px). De tests staan niet in de
   repository (tijdelijke map van de sessie). **Niet getest:** de echte Supabase, echte mails, echte meldingen (aanzetten,
   ontvangen en erop tikken kan alleen op een echt toestel), de chat met het toetsenbord van een iPhone, het

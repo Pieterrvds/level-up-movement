@@ -25,6 +25,29 @@ export const siteUrl = () => window.location.origin + window.location.pathname;
 
 // The database answers in English (the old site translates it too). What a client can run into while booking:
 const SERVER: [RegExp, string | ((m: RegExpMatchArray) => string)][] = [
+  // the admin
+  [/Admin access only/, "Dit kan alleen de beheerder."],
+  [/Application not found|application has already been reviewed/, "Deze sollicitatie is al behandeld."],
+  [/trainer card is already linked/, "Die kaart is al aan een account gekoppeld."],
+  [/Give the trainer a name/, "Geef de coach een naam (2 tot 60 tekens)."],
+  [/Unknown trainer|Trainer not found/, "Deze coach vinden we niet."],
+  [/Only an unpaid pack request can be cancelled|This pack has already been handled|Pack not found/, "Dit pakket is al behandeld."],
+  [/Enter a price between 0 and 500/, "Vul een prijs in tussen 0 en 500 euro."],
+  [/trainer fee can't be more than the price/, "De vergoeding kan niet hoger zijn dan de prijs."],
+  [/doesn't need a payment/, "Voor deze sessie moet niets meer betaald worden."],
+  [/No manual refund open/, "Hier moet niets meer teruggegeven worden."],
+  [/Nothing to pay out/, "Voor deze coach is er niets uit te betalen."],
+  [/no longer waits for approval/, "Deze soort wacht niet meer op goedkeuring."],
+  [/There is already a training called (.+)\. Pick/, (m) => `Er bestaat al een soort die "${m[1]}" heet. Kies een andere naam, of weiger deze.`],
+  [/Give the training a name of 2 to 40/, "Geef de soort een naam van 2 tot 40 tekens."],
+  [/Write a title of 3 to 60/, "Schrijf een titel van 3 tot 60 tekens."],
+  [/Keep the message under 200/, "Hou het bericht onder 200 tekens."],
+  [/3 messages in one day already/, "Dat zijn al 3 berichten vandaag. Meer voelt als spam: probeer het morgen opnieuw."],
+  [/Enter an amount of XP/, "Vul in hoeveel XP."],
+  [/At most 5000 XP at once/, "Hoogstens 5000 XP in één keer."],
+  [/Write a short reason/, "Schrijf kort waarom; het lid leest dit."],
+  [/Keep the reason under 140/, "Hou de reden onder 140 tekens."],
+  [/Player not found/, "Dit lid vinden we niet."],
   [/Someone just booked this slot/, "Iemand heeft dit uur net geboekt. Kies een ander uur."],
   [/You already have a session at this time/, "Je hebt op dit moment al een sessie."],
   [/The gym is full at that time/, "De zaal is op dat uur volzet. Kies een ander uur."],
@@ -121,7 +144,8 @@ export function friendly(error: unknown): string {
 // What can put a notification in the queue on the server. The Edge Function "push" sends the queue when it is asked to
 // (the old site asks the same way); calls close together become one, at most every 5 seconds.
 const PUSH_AFTER = new Set(["book_session", "book_series", "series_stop", "respond_booking", "reward_session", "mark_no_show", "cancel_booking",
-  "move_booking", "class_signup", "class_cancel", "class_cancel_class", "class_mark", "class_finish", "class_create", "chat_send", "push_test", "request_pack", "set_trainer_available"]);
+  "move_booking", "class_signup", "class_cancel", "class_cancel_class", "class_mark", "class_finish", "class_create", "chat_send", "push_test", "request_pack", "set_trainer_available",
+  "admin_kind_decide", "review_trainer_application", "mark_pack_paid", "mark_paid_in_person", "admin_announce", "admin_grant_xp", "save_trainer_hours", "delete_trainer_hours"]);
 let lastFlush = 0;
 let flushTimer: ReturnType<typeof setTimeout> | undefined;
 export function flushPush() {

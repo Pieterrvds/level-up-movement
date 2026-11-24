@@ -1,7 +1,7 @@
 // Your account: who you are, your sessions and packs, your progress, your settings and logging out.
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { CalendarDays, Camera, Cake, HeartPulse, KeyRound, LogOut, Palette, Trash2 } from "lucide-react";
+import { CalendarDays, Camera, Cake, HandCoins, HeartPulse, KeyRound, LogOut, Megaphone, Palette, Trash2, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, Badge, Button, Card, CardHead, Figures, List, ListRow, Notice, Page, PasswordField, Progress, Select, Sheet, Stat, Tabs } from "../ui";
 import { useAccount } from "../lib/account";
@@ -69,6 +69,16 @@ export default function Profiel({ title }: { title: string }) {
 
   return (
     <Page title={title}>
+      {role === "admin" && (
+        <div>
+          <h2 className="mb-2 px-1 text-lg font-semibold">Beheer</h2>
+          <List>
+            <ListRow lead={<Icon><UsersRound size={20} /></Icon>} title="Leden" text="Iedereen met een account" onClick={() => navigate("/leden")} />
+            <ListRow lead={<Icon><HandCoins size={20} /></Icon>} title="Betalingen" text="Te ontvangen en uit te betalen" onClick={() => navigate("/betalingen")} />
+            <ListRow lead={<Icon><Megaphone size={20} /></Icon>} title="Nieuws" text="Een bericht voor alle leden" onClick={() => navigate("/nieuws")} />
+          </List>
+        </div>
+      )}
       <Card>
         <div className="flex items-center gap-4">
           <button type="button" onClick={() => file.current?.click()} className="relative shrink-0 rounded-full" aria-label="Foto wijzigen" disabled={busy}>

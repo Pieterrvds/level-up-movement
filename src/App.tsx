@@ -18,6 +18,11 @@ import Agenda from "./pages/Agenda";
 import Chat from "./pages/Chat";
 import Gesprek from "./pages/Gesprek";
 import { ChatProvider } from "./lib/chat";
+import { AdminProvider } from "./lib/admin";
+import { Team, TeamCoach } from "./pages/Team";
+import Leden from "./pages/Leden";
+import Betalingen from "./pages/Betalingen";
+import Nieuws from "./pages/Nieuws";
 
 // The look and the example screens (made-up data): open to everyone, they are the reference while the app is built
 const reference = (
@@ -69,6 +74,7 @@ export default function App() {
   return (
     <BookingProvider>
     <CoachProvider>
+    <AdminProvider>
     <ChatProvider>
     <Routes>
       <Route element={<AppShell role={account.role} />}>
@@ -79,7 +85,10 @@ export default function App() {
         <Route path="gezondheid" element={<Gezondheid />} />
         <Route path="sessies" element={<Sessies />} />
         <Route path="agenda" element={account.player.trainerId ? <Agenda /> : <Navigate to="/" replace />} />
-        <Route path="team" element={<Later title="Team" step="stap 7" text="Elke trainer met zijn lessen en uren." />} />
+        {/* the admin's screens: only for an admin (the server checks every action again) */}
+        {[["team", <Team />], ["team/:id", <TeamCoach />], ["leden", <Leden />], ["betalingen", <Betalingen />], ["nieuws", <Nieuws />]].map(([path, el]) => (
+          <Route key={path as string} path={path as string} element={account.player?.admin ? el : <Navigate to="/" replace />} />
+        ))}
         <Route path="chat" element={<Chat />} />
         <Route path="chat/:id" element={<Gesprek />} />
         <Route path={last} element={<Profiel title={account.role === "admin" ? "Meer" : "Profiel"} />} />
@@ -88,6 +97,7 @@ export default function App() {
       </Route>
     </Routes>
     </ChatProvider>
+    </AdminProvider>
     </CoachProvider>
     </BookingProvider>
   );

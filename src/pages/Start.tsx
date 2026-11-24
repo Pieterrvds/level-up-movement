@@ -1,7 +1,7 @@
 // The first screen after logging in. A client sees the next session, the progress and the coaches; the start
 // screens of a coach and the admin come with their own step (see HERSTART.md).
 import { useEffect } from "react";
-import { CalendarDays, Clock, Hammer, MapPin } from "lucide-react";
+import { CalendarDays, Clock, MapPin } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Avatar, Badge, Button, Card, CardHead, Empty, List, ListRow, Notice, Page, Progress } from "../ui";
 import { useAccount } from "../lib/account";
@@ -12,8 +12,8 @@ import { dateKey, addDays, hourSpan, inDays, longDay, slotStart } from "../lib/d
 import { levelOf } from "../lib/level";
 import { mailReturn } from "../lib/supabase";
 import Vandaag from "./Vandaag";
+import Overzicht from "./Overzicht";
 
-const today = () => { const t = new Date().toLocaleDateString("nl-BE", { weekday: "long", day: "numeric", month: "long" }); return t[0].toUpperCase() + t.slice(1); };
 /** sessions that are still to come: asked for or confirmed */
 export const upcoming = (list: Booking[]) => list.filter((b) => ["pending", "confirmed", "awaiting_payment"].includes(b.status) && slotStart(b.date, b.hour + 1) > new Date())
   .sort((a, b) => slotStart(a.date, a.hour).getTime() - slotStart(b.date, b.hour).getTime());
@@ -111,16 +111,8 @@ function Klant() {
 }
 
 export default function Start() {
-  const { player, role } = useAccount();
-  const first = (player?.name || "").trim().split(/\s+/)[0] || "daar";
+  const { role } = useAccount();
   if (role === "klant") return <Klant />;
   if (role === "coach") return <Vandaag />;
-  return (
-    <Page title="Overzicht" text={today()}>
-      {mailReturn.type === "signup" && <Notice>Je e-mail is bevestigd. Welkom bij LEVEL-UP!</Notice>}
-      <Card pad={false}>
-        <Empty icon={<Hammer size={22} />} title="Het overzicht komt in stap 7" text={`Hallo ${first}. Hier komt wat op jou wacht: goedkeuren, sollicitaties en wijzigingen van coaches.`} />
-      </Card>
-    </Page>
-  );
+  return <Overzicht />;
 }
