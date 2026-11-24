@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CalendarDays, Plus, Inbox } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Avatar, Badge, Button, Card, CardHead, Chip, Empty, Field, Figures, List, ListRow, Notice, Page, PasswordField, Progress, Sheet, Stat, Switch, Tabs } from "../ui";
+import { Avatar, Badge, Bubble, Button, Card, Composer, Count, CardHead, Chip, Empty, Field, Figures, List, ListRow, Notice, Page, PasswordField, Progress, Sheet, Stat, Switch, Tabs } from "../ui";
 
 const SWATCHES: [string, string, string][] = [
   ["bg-canvas", "Achtergrond", "#F5F6F2"], ["bg-surface", "Kaart", "#FFFFFF"], ["bg-sunken", "Verzonken", "#ECEEE8"],
@@ -17,6 +17,7 @@ export default function Stijl() {
   const [hour, setHour] = useState("10:00");
   const [on, setOn] = useState(true);
   const [sheet, setSheet] = useState(false);
+  const [note, setNote] = useState("");
   return (
     <Page title="Stijl" text="De bouwstenen waarmee elk scherm gemaakt wordt.">
       <div>
@@ -110,6 +111,15 @@ export default function Stijl() {
           <Notice tone="warn">Je coach moet deze sessie nog bevestigen.</Notice>
           <Notice tone="danger">Dit uur is net door iemand anders geboekt.</Notice>
         </div>
+      </Card>
+
+      <Card>
+        <CardHead title="Chat" hint="Jouw bericht staat rechts, dat van de ander links." action={<Count n={3} label="3 nieuw" />} />
+        <div className="grid gap-2">
+          <Bubble name="Lars · coach" time="09:12">Tot zaterdag! Breng je handschoenen mee.</Bubble>
+          <Bubble mine time="09:14" below={<span>Gelezen</span>}>Top, tot dan.</Bubble>
+        </div>
+        <div className="mt-4"><Composer value={note} onChange={setNote} onSend={() => setNote("")} /></div>
       </Card>
 
       <Card>

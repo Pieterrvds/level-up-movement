@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { ReactNode } from "react";
 import { call, friendly, siteUrl, supabase } from "./supabase";
 import type { Role } from "../nav";
+import { syncPush, unlinkPush } from "./push";
 
 /** The account as `my_data` returns it. Only the fields the screens built so far use; the server sends more. */
 export type Player = {
@@ -114,7 +115,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       if (id === userId.current) return; // the same person (a refreshed token, the tab came back): nothing to load
       userId.current = id;
       // not inside this callback: Supabase holds a lock while it runs, and a database call here would wait on it
-      setTimeout(() => { void load(); if (event === "SIGNED_IN") void call("touch_login").catch(() => {}); }, 0);
+      setTimeout(() => { void load(); void syncPush(); if (event === "SIGNED_IN") void call("touch_login").catch(() => {}); }, 0);
     });
     return () => data.subscription.unsubscribe();
   }, [load]);
@@ -161,6 +162,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       setRecovering(false);
     },
     async logOut() {
+      await unlinkPush().catch(() => {}); // this device no longer gets this account's notifications
       const { error: e } = await supabase.auth.signOut();
       if (e) throw new Error(friendly(e));
     },

@@ -9,6 +9,7 @@ import { useBooking, quote } from "../lib/booking";
 import KlasVenster, { classBadge } from "./Klas";
 import type { Slot } from "../lib/booking";
 import { call, friendly } from "../lib/supabase";
+import { MessageButton } from "../lib/chat";
 import { dayParts, everyWeekday, hourSpan, hourText, isoWeekday, longDay } from "../lib/dates";
 
 const Loading = () => <Card pad={false}><Empty title="Even laden…" /></Card>;
@@ -131,10 +132,11 @@ export function BoekenCoach() {
       <Card>
         <div className="flex items-center gap-4">
           <Avatar name={coach.name} src={coach.photo || undefined} size={64} status={coach.available ? "active" : "away"} />
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="font-semibold">{coach.available ? "Neemt boekingen aan" : "Even afwezig"}</p>
             {coach.specialties.length > 0 && <p className="text-sm text-muted">{coach.specialties.join(" · ")}</p>}
           </div>
+          {coach.linked && coach.id !== player?.trainerId && <div className="grid shrink-0 justify-items-end gap-2"><MessageButton coach={coach.id} /></div>}
         </div>
         {coach.bio && <p className="mt-4 text-[15px] text-muted">{coach.bio}</p>}
       </Card>

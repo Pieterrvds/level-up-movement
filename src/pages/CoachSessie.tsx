@@ -7,6 +7,7 @@ import type { CoachBooking } from "../lib/coach";
 import { useCoach } from "../lib/coach";
 import { useBooking, NO_KIND, euro } from "../lib/booking";
 import { call, friendly } from "../lib/supabase";
+import { MessageButton } from "../lib/chat";
 import { dateKey, hourSpan, hourText, longDay, slotStart } from "../lib/dates";
 import { STATUS } from "./Sessies";
 import { QUESTIONS } from "./Gezondheid";
@@ -70,6 +71,7 @@ export default function CoachSessie({ booking, onClose, onDone }: { booking: Coa
             <Button block size="lg" disabled={busy} onClick={() => void run(() => call("reward_session", { p_id: b.id }), `Afgerond. ${first} krijgt XP.`)}>Afgerond</Button>
             {begun && <Button variant="danger" block disabled={busy} onClick={() => void run(() => call("mark_no_show", { p_id: b.id }), `${first} staat op "niet gekomen". De sessie wordt aangerekend.`)}>Niet gekomen</Button>}
           </>)}
+          {!moving && <MessageButton block user={b.userId} label={`Bericht naar ${first}`} />}
           {["pending", "confirmed"].includes(b.status) && !begun && !moving && <Button variant="secondary" block onClick={() => { setError(""); setMoving(true); setDay(b.date); setHour(String(b.hour)); }}>Verplaatsen</Button>}
           {moving && (
             <div className="grid gap-3 rounded-field border border-line p-4">

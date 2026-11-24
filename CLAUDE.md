@@ -30,7 +30,7 @@ willen; het platform verbindt hen met klanten. Gevolgen voor alles wat gebouwd w
 
 - `src/index.css`: alle kleuren, het lettertype en de rondingen als tokens (`@theme`).
 - `src/ui/index.tsx`: de bouwstenen (Button, Card, Field, Tabs, Chip, Badge, Avatar, ListRow, List, Progress, Stat,
-  Figures, Switch, Notice, Empty, Sheet, Page).
+  Figures, Switch, Notice, Empty, Sheet, Count, Bubble, Composer, Page).
 - `src/shell/AppShell.tsx`: het kader: balk bovenaan en vier knoppen onderaan (telefoon), kolom links (computer).
 - `src/nav.ts`: welke vier knoppen elke rol ziet.
 - `src/pages/`: de schermen. `Stijl.tsx` toont alle bouwstenen; `Voorbeeld.tsx` zijn startschermen met verzonnen
@@ -155,10 +155,45 @@ willen; het platform verbindt hen met klanten. Gevolgen voor alles wat gebouwd w
   - Nog niet: een geplande les wijzigen (`class_update`), een tweede coach op een les zetten en betalingen per
     deelnemer (beide alleen voor de beheerder, stap 7), voorbije lessen in "Mijn sessies" (de server geeft de
     klant alleen lessen vanaf vandaag).
-- **Volgende: stap 6**, chat en meldingen.
+- **Bedragen (24 november 2026):** `euro()` houdt teken en getal samen; verdiensten en pakketprijzen staan in
+  rijen (`Figures`), een pakket opent een venster met de prijs voor je het aanvraagt. Zie stijlregel 9.
+- **Stap 6 klaar (24 november 2026):** chat en meldingen.
+  - `src/lib/chat.tsx`: `ChatProvider`/`useChat()` houdt het aantal ongelezen berichten bij (`chat_unread`, elke
+    20 seconden en als de app weer naar voren komt) voor de knop Chat. `MessageButton` opent van eender waar het
+    gesprek met een coach (`chat_open`) of een lid (`chat_open_user`); hij staat op de pagina van een coach, in het
+    venster van een sessie (klant) en in het venster van een sessie van de coach.
+  - `src/pages/Chat.tsx` (`/chat`): de lijst (`chat_list`, ververst elke 15 seconden), een tab Archief zodra er
+    iets in zit, en "Nieuw": de coaches met een account, of zoeken op naam (`chat_search`, vanaf 2 letters).
+  - `src/pages/Gesprek.tsx` (`/chat/:id`): de berichten (`chat_thread`, elke 3 seconden alleen wat nieuw is),
+    versturen (`chat_send`; op een computer verstuurt Enter), een hartje op andermans bericht (`chat_like`),
+    "Gelezen" onder je laatste bericht in een privégesprek, webadressen als link. Het menu ⋯: sessie boeken bij
+    deze coach, meldingen van een groep aan/uit (`chat_mute`), archiveren (`chat_archive`) en een privégesprek
+    verwijderen (`chat_delete`, met een tweede tik). Op een telefoon verbergt het kader zijn balken zolang een
+    gesprek open is (`focus` in `AppShell.tsx`); de hoogte volgt het toetsenbord (`visualViewport`).
+  - Groepschats (van een les, en "Coaches" voor het team) maakt de server zelf; ze staan vanzelf in de lijst.
+  - Meldingen: `public/sw.js` is de service worker; hij bewaart geen kopie van de app, hij toont alleen meldingen
+    en opent het juiste scherm. De server schrijft meldingen in het Engels en met adressen van de oude site:
+    `public/push-nl.js` is een kopie van `i18n-nl.js` uit de oude repository (vertaling) en `route()` in `sw.js`
+    zet een oud adres om naar een scherm van deze app. **Krijgt de server een nieuwe meldingstekst, kopieer dan
+    `i18n-nl.js` opnieuw naar `public/push-nl.js`.** `src/lib/push.ts` zet meldingen aan en uit op dit toestel
+    (`push_public_key`, `save_push_subscription`, `delete_push_subscription`, `push_test`); bij inloggen wordt een
+    bestaand abonnement aan het account gekoppeld, bij uitloggen losgemaakt. `src/pages/Meldingen.tsx` (Profiel →
+    Instellingen → Meldingen): op dit toestel, chatberichten (`set_push_chat`), nieuws (`set_push_news`).
+  - `call()` vraagt na elke actie die een melding in de wachtrij zet aan de Edge Function `push` om ze te versturen
+    (`PUSH_AFTER` en `flushPush()` in `supabase.ts`), zoals de oude site.
+  - De app is installeerbaar (`public/manifest.webmanifest`, iconen in `public/icons/`); op een iPhone werken
+    meldingen alleen in de app op het beginscherm.
+  - De oude en de nieuwe site hebben elk hun eigen abonnement op meldingen: wie ze op beide aanzet, krijgt elke
+    melding twee keer. Tot de overstap dus op één van de twee aanzetten.
+  - Nog niet: een groepschat verwijderen (beheerder, stap 7), een pop-up bovenaan als er een bericht binnenkomt
+    terwijl je op een ander scherm bent (nu alleen het cijfer op de knop Chat), foto's in de chat (bestaat ook op
+    de oude site niet), de assistent Levelupy (bewust uitgesteld).
+- **Volgende: stap 7**, de beheerder (admin).
 - **Getest** (Playwright, 390, 360 en 1280 px) tegen een nagebouwde Supabase met de echte `schema.sql`: 42
-  controles van stap 1, 37 van stap 2, 36 van stap 3, 35 van stap 4 en 33 van stap 5. De tests staan niet in de
-  repository (tijdelijke map van de sessie). **Niet getest:** de echte Supabase, echte mails, echte meldingen, het
+  controles van stap 1, 37 van stap 2, 36 van stap 3, 35 van stap 4, 33 van stap 5, 45 van stap 6 en 12 voor de
+  bedragen (ook op 320 px). De tests staan niet in de
+  repository (tijdelijke map van de sessie). **Niet getest:** de echte Supabase, echte mails, echte meldingen (aanzetten,
+  ontvangen en erop tikken kan alleen op een echt toestel), de chat met het toetsenbord van een iPhone, het
   echte opladen van een foto, het agendabestand op een telefoon, echte telefoons en Safari.
 - **Nog te beslissen:** wat een bezoeker ziet vóór hij inlogt (nu meteen het inlogscherm; de oude site heeft een
   homepage met uitleg en coaches), en waar de privacytekst komt (de link wijst nu naar de oude site).

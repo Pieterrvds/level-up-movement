@@ -8,6 +8,7 @@ import { useAccount } from "../lib/account";
 import type { Booking, Series } from "../lib/account";
 import { useBooking, NO_KIND, euro } from "../lib/booking";
 import { call, friendly } from "../lib/supabase";
+import { MessageButton } from "../lib/chat";
 import { calendarFile, everyWeekday, hourSpan, hourText, longDay, shortDay, slotStart } from "../lib/dates";
 import { upcoming } from "./Start";
 import KlasVenster, { classBadge, myClasses } from "./Klas";
@@ -113,6 +114,7 @@ export default function Sessies() {
               {error && <Notice tone="danger">{error}</Notice>}
               {!sure ? (<>
                 <Button variant="secondary" block icon={<CalendarPlus size={18} />} onClick={() => calendarFile(open.id, title(open), open.place || data.pricing.place, open.date, open.hour)}>Zet in mijn agenda</Button>
+                {data.coach(open.trainerId)?.linked && <MessageButton block coach={open.trainerId} label={`Bericht naar ${data.coach(open.trainerId)?.short}`} />}
                 <Button variant="danger" block onClick={() => setSure(true)}>Annuleren</Button>
                 <p className="text-sm text-muted">Een ander uur? Annuleer en boek opnieuw. Je coach kan een sessie ook voor jou verplaatsen.</p>
               </>) : (<>

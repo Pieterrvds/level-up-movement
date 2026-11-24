@@ -94,7 +94,7 @@ Eén stap per chat. Aan het einde van elke stap: `CLAUDE.md` bijwerken ("Stand v
 3. Klant: mijn sessies en profiel. **Klaar** (verplaatsen kan alleen de coach; duo en spaarkaart komen later).
 4. Coach: Vandaag, Agenda en uren. **Klaar.**
 5. Groepslessen (klant en coach). **Klaar.**
-6. Chat en meldingen.
+6. Chat en meldingen. **Klaar.**
 7. Admin.
 8. Extra's die blijven (klassement, shop, …).
 9. Overschakelen: alles doorlopen met echte accounts, dan live.

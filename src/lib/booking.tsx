@@ -11,7 +11,9 @@ export const WEEKS_AHEAD = 4; // booking_weeks_ahead on the server
 export const NOTICE_HOURS = 12; // booking_notice_hours on the server
 export const NO_KIND = "Personal training"; // hours without a label are the classic 1:1 training
 
-export type Coach = { id: string; name: string; short: string; role: string; bio: string; specialties: string[]; photo: string; available: boolean };
+export type Coach = { id: string; name: string; short: string; role: string; bio: string; specialties: string[]; photo: string; available: boolean;
+  /** has an account, so you can send a message */
+  linked: boolean };
 export type HoursRow = { id: string; trainerId: string; weekday: number | null; date: string | null; start: number; end: number; kind: string; activity: string; location: string; pending: boolean };
 type Taken = { trainer_id: string; day: string; hour: number; booking_id: string | null; status: string | null };
 export type Pricing = { price: number; introPrice: number; place: string; trainers: Record<string, number>; packs: { size: number; price: number }[]; classCapacity: number };
@@ -42,7 +44,7 @@ const toCoach = (r: CoachRow): Coach => {
     id: r.id, name: r.name, short: r.name.trim().split(/\s+/)[0],
     role: r.role || first?.role || "Coach", bio: r.bio || "",
     specialties: tags.length ? tags : first?.specialties || [],
-    photo: r.avatar_url || FIRST[r.id]?.photo || "", available: r.available !== false,
+    photo: r.avatar_url || FIRST[r.id]?.photo || "", available: r.available !== false, linked: Boolean(r.linked),
   };
 };
 

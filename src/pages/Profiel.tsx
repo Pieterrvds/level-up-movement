@@ -11,6 +11,7 @@ import { call, friendly, supabase } from "../lib/supabase";
 import { levelOf } from "../lib/level";
 import { ROLE_LABEL } from "../nav";
 import { upcoming } from "./Start";
+import Meldingen from "./Meldingen";
 
 const MONTHS = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
 const Icon = ({ children }: { children: ReactNode }) => <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-sunken text-muted">{children}</span>;
@@ -139,6 +140,7 @@ export default function Profiel({ title }: { title: string }) {
         <List>
           <ListRow lead={<Icon><HeartPulse size={20} /></Icon>} title="Gezondheidsvragen" text={player.healthForm?.valid ? "Ingevuld. Je kan ze altijd aanpassen." : "Nog in te vullen voor je eerste sessie"} onClick={() => navigate(`/gezondheid?terug=${encodeURIComponent(role === "admin" ? "/meer" : "/profiel")}`)} />
           <ListRow lead={<Icon><Cake size={20} /></Icon>} title="Geboortedag" text={birthdayText} onClick={() => { setError(""); setSheet("birthday"); }} />
+          <Meldingen />
           <ListRow lead={<Icon><KeyRound size={20} /></Icon>} title="Wachtwoord wijzigen" onClick={() => { setError(""); setSheet("password"); }} />
           <ListRow lead={<Icon><Palette size={20} /></Icon>} title="Stijl en bouwstenen" text="Hoe de app eruitziet en waaruit ze gemaakt is" onClick={() => navigate("/stijl")} />
         </List>

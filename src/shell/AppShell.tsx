@@ -1,6 +1,8 @@
 // The frame around every screen: on a phone a slim bar on top and four buttons at the bottom,
 // on a computer the same four in a column on the left.
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useMatch } from "react-router-dom";
+import { Count } from "../ui";
+import { useChat } from "../lib/chat";
 import { NAV } from "../nav";
 import type { Role } from "../nav";
 
@@ -21,6 +23,10 @@ export function Logo() {
 
 export default function AppShell({ role }: { role: Role }) {
   const items = NAV[role];
+  const { unread } = useChat();
+  // an open conversation takes the whole phone screen: no bars, so the messages and the keyboard have the room
+  const focus = Boolean(useMatch("/chat/:id"));
+  const news = (to: string) => (to === "/chat" ? unread : 0);
   return (
     <div className="min-h-dvh sm:pl-60">
       {/* computer: the column on the left */}
@@ -31,25 +37,29 @@ export default function AppShell({ role }: { role: Role }) {
             <NavLink key={it.to} to={it.to} end={it.to === "/"}
               className={({ isActive }) => `flex h-11 items-center gap-3 rounded-field px-3 font-medium transition-colors ${isActive ? "bg-accent-soft text-accent-ink" : "text-muted hover:bg-sunken hover:text-ink"}`}>
               <it.icon size={20} aria-hidden />{it.label}
+              <span className="ml-auto"><Count n={news(it.to)} label={`${news(it.to)} nieuw`} /></span>
             </NavLink>
           ))}
         </nav>
       </aside>
 
       {/* phone: the bar on top */}
-      <header className="sticky top-0 z-20 flex h-14 items-center border-b border-line bg-canvas/90 px-4 backdrop-blur sm:hidden">
+      <header className={`sticky top-0 z-20 h-14 items-center border-b border-line bg-canvas/90 px-4 backdrop-blur sm:hidden ${focus ? "hidden" : "flex"}`}>
         <Logo />
       </header>
 
-      <main className="pb-24 sm:pb-0"><Outlet /></main>
+      <main className={focus ? "" : "pb-24 sm:pb-0"}><Outlet /></main>
 
       {/* phone: four buttons at the bottom */}
-      <nav aria-label="Hoofdmenu" className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] sm:hidden">
+      <nav aria-label="Hoofdmenu" className={`fixed inset-x-0 bottom-0 z-20 grid-cols-4 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] sm:hidden ${focus ? "hidden" : "grid"}`}>
         {items.map((it) => (
           <NavLink key={it.to} to={it.to} end={it.to === "/"}
             className={({ isActive }) => `grid h-16 place-content-center justify-items-center gap-1 text-xs font-medium ${isActive ? "text-accent-ink" : "text-muted"}`}>
             {({ isActive }) => (<>
-              <span className={`grid h-7 w-14 place-items-center rounded-full transition-colors ${isActive ? "bg-accent-soft" : ""}`}><it.icon size={20} aria-hidden /></span>
+              <span className={`relative grid h-7 w-14 place-items-center rounded-full transition-colors ${isActive ? "bg-accent-soft" : ""}`}>
+                <it.icon size={20} aria-hidden />
+                <span className="absolute -top-1 right-1"><Count n={news(it.to)} label={`${news(it.to)} nieuw`} /></span>
+              </span>
               {it.label}
             </>)}
           </NavLink>
