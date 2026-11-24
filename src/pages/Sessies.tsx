@@ -1,6 +1,6 @@
 // My sessions: what is coming and what is behind me. A session opens in a window: put it in my calendar, or
 // cancel it. Moving a session is the coach's job on the server; a client cancels and books another hour.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, CalendarDays, CalendarPlus, Clock, MapPin, Repeat } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Badge, Button, Card, Empty, List, ListRow, Notice, Page, Sheet, Tabs } from "../ui";
@@ -10,6 +10,7 @@ import { useBooking, NO_KIND, euro } from "../lib/booking";
 import { call, friendly } from "../lib/supabase";
 import { calendarFile, everyWeekday, hourSpan, hourText, longDay, shortDay, slotStart } from "../lib/dates";
 import { upcoming } from "./Start";
+import KlasVenster, { classBadge, myClasses } from "./Klas";
 
 export const STATUS: Record<string, { text: string; tone: "accent" | "warn" | "neutral" | "danger" }> = {
   confirmed: { text: "Bevestigd", tone: "accent" }, pending: { text: "Wacht op bevestiging", tone: "warn" }, awaiting_payment: { text: "Wacht op betaling", tone: "warn" },
@@ -20,6 +21,8 @@ export const STATUS: Record<string, { text: string; tone: "accent" | "warn" | "n
 export default function Sessies() {
   const { player, reload, role } = useAccount();
   const home = role === "admin" ? "/meer" : "/profiel"; // the admin's last button is "Meer"
+  const { refresh: refreshAccount } = useAccount();
+  useEffect(() => { data.refresh(); refreshAccount(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const data = useBooking();
   const navigate = useNavigate();
   const [tab, setTab] = useState<"komend" | "voorbij">("komend");
@@ -33,6 +36,10 @@ export default function Sessies() {
   const past = all.filter((b) => !next.includes(b)).sort((a, b) => slotStart(b.date, b.hour).getTime() - slotStart(a.date, a.hour).getTime()).slice(0, 30);
   const weekly = (player?.series || []).filter((s) => s.status !== "ended");
   const open = all.find((b) => b.id === openId) || null;
+  // the group classes you are in (or wait for) stand between your sessions, in order of time
+  const lessons = myClasses(data.classes);
+  const [lessonId, setLessonId] = useState("");
+  const komend = [...next.map((b) => ({ at: slotStart(b.date, b.hour).getTime(), b, c: null as null | typeof lessons[number] })), ...lessons.map((c) => ({ at: new Date(c.startsAt).getTime(), b: null as null | Booking, c }))].sort((x, y) => x.at - y.at);
   const coachOf = (id: string) => data.coach(id)?.short || "je coach";
   const title = (b: Booking) => `${b.what || NO_KIND} met ${coachOf(b.trainerId)}`;
   const late = (b: Booking) => b.status === "confirmed" && Boolean(b.freeCancelUntil) && new Date(b.freeCancelUntil!) < new Date();
@@ -63,7 +70,7 @@ export default function Sessies() {
       <div><Button variant="ghost" size="sm" icon={<ArrowLeft size={18} />} onClick={() => navigate(home)} className="-ml-3">{role === "admin" ? "Meer" : "Profiel"}</Button></div>
       {flash && <Notice>{flash}</Notice>}
       {error && !open && <Notice tone="danger">{error}</Notice>}
-      <Tabs label="Sessies" value={tab} onChange={setTab} tabs={[{ id: "komend", label: "Komend", count: next.length || undefined }, { id: "voorbij", label: "Voorbij" }]} />
+      <Tabs label="Sessies" value={tab} onChange={setTab} tabs={[{ id: "komend", label: "Komend", count: komend.length || undefined }, { id: "voorbij", label: "Voorbij" }]} />
       {tab === "komend" && weekly.map((s) => (
         <Card key={s.id}>
           <div className="flex items-start gap-3">
@@ -76,11 +83,15 @@ export default function Sessies() {
           </div>
         </Card>
       ))}
-      {tab === "komend" && (next.length ? <List>{next.map(row)}</List>
+      {tab === "komend" && (komend.length ? <List>{komend.map(({ b, c }) => b ? row(b) : c ? (
+        <ListRow key={c.id} lead={<span className="w-[4.5rem] shrink-0 text-sm leading-tight"><span className="block font-semibold">{shortDay(c.date)}</span><span className="text-muted">{c.time}</span></span>}
+          title={`${c.title} · groepsles`} text={c.location || data.pricing.place} below={<Badge tone={classBadge(c).tone}>{classBadge(c).text}</Badge>} onClick={() => { setFlash(""); setLessonId(c.id); }} />
+      ) : null)}</List>
         : <Card pad={false}><Empty icon={<CalendarDays size={22} />} title="Geen sessies gepland" text="Kies een coach en een uur." action={<Link to="/boeken" className="contents"><Button>Naar boeken</Button></Link>} /></Card>)}
       {tab === "voorbij" && (past.length ? <List>{past.map(row)}</List>
         : <Card pad={false}><Empty title="Nog niets achter de rug" text="Hier komen je afgeronde sessies." /></Card>)}
 
+      <KlasVenster klas={data.classes.find((c) => c.id === lessonId) || null} onClose={() => setLessonId("")} onDone={(text) => { setLessonId(""); setFlash(text); }} />
       <Sheet open={Boolean(open)} onClose={close} title="Sessie">
         {open && (<>
           <div className="flex items-center justify-between gap-3">

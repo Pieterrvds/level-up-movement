@@ -135,10 +135,28 @@ willen; het platform verbindt hen met klanten. Gevolgen voor alles wat gebouwd w
   - "Betaald" aanduiden kan een coach niet: `mark_paid_in_person` is op de server alleen voor de beheerder (stap 7).
   - Nog niet: het afschrift per maand (`coach_statement`), een nieuwe soort voorstellen met foto en tekst
     (`kind_propose`; nu volstaat de naam bij de uren), groepslessen (stap 5).
-- **Volgende: stap 5**, groepslessen voor klant en coach.
+- **Stap 5 klaar (24 november 2026):** groepslessen.
+  - Klant: `useBooking().classes` (`class_list`). Boeken heeft twee tabs, "Bij een coach" en "Groepslessen"
+    (`?soort=groep`; de open les staat in het adres als `&les=<id>`). `src/pages/Klas.tsx` is het venster van een
+    les: inschrijven (`class_signup`, betalen ter plaatse), bij een volle les op de wachtlijst, uitschrijven
+    (`class_cancel`, met een tweede tik en een waarschuwing als het niet meer gratis is). Wie de gezondheidsvragen
+    nog niet invulde, doet dat eerst en keert terug naar de les. Start en "Mijn sessies" tonen lessen tussen de
+    sessies, in volgorde van tijd.
+  - Coach: `useCoach().classes` (`class_manage_list`, alleen zijn eigen lessen). "Vandaag" toont de lessen van
+    de dag en zet een begonnen les onder "Te doen". Agenda heeft drie tabs: Komend (sessies en lessen per dag),
+    Groepslessen (plannen met `class_create`: naam, dag, uur, duur, plaatsen, herhalen tot 12 weken, plaats, nota,
+    aankondigen) en Mijn uren. `src/pages/CoachKlas.tsx`: wie komt (`class_roster`), aanvinken vanaf 30 minuten
+    voor de start (`class_mark`, geeft meteen XP), afronden (`class_finish`) en annuleren met een reden
+    (`class_cancel_class`, alleen deze of ook de volgende).
+  - De app ververst haar gegevens als een scherm opent of de app weer naar voren komt en wat ze heeft ouder is dan
+    15 seconden (`refresh()` in `booking.tsx`, `coach.tsx` en `account.tsx`).
+  - Nog niet: een geplande les wijzigen (`class_update`), een tweede coach op een les zetten en betalingen per
+    deelnemer (beide alleen voor de beheerder, stap 7), voorbije lessen in "Mijn sessies" (de server geeft de
+    klant alleen lessen vanaf vandaag).
+- **Volgende: stap 6**, chat en meldingen.
 - **Getest** (Playwright, 390, 360 en 1280 px) tegen een nagebouwde Supabase met de echte `schema.sql`: 42
-  controles van stap 1, 37 van stap 2, 36 van stap 3 en 35 van stap 4. De tests staan niet in de repository
-  (tijdelijke map van de sessie). **Niet getest:** de echte Supabase, echte mails, echte meldingen, het echte
-  opladen van een foto, het agendabestand op een telefoon, echte telefoons en Safari.
+  controles van stap 1, 37 van stap 2, 36 van stap 3, 35 van stap 4 en 33 van stap 5. De tests staan niet in de
+  repository (tijdelijke map van de sessie). **Niet getest:** de echte Supabase, echte mails, echte meldingen, het
+  echte opladen van een foto, het agendabestand op een telefoon, echte telefoons en Safari.
 - **Nog te beslissen:** wat een bezoeker ziet vóór hij inlogt (nu meteen het inlogscherm; de oude site heeft een
   homepage met uitleg en coaches), en waar de privacytekst komt (de link wijst nu naar de oude site).

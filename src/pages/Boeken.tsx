@@ -1,11 +1,12 @@
 // Booking a session, in three calm steps: 1. what and with whom (this list), 2. a day and an hour (the coach's
 // screen), 3. confirm (the window). Group classes join in step 5.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, CalendarDays, CalendarX, Clock, MapPin } from "lucide-react";
+import { ArrowLeft, CalendarDays, CalendarX, Clock, MapPin, UsersRound } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Avatar, Badge, Button, Card, Chip, Empty, List, ListRow, Notice, Page, Sheet, Tabs, TextArea } from "../ui";
 import { useAccount } from "../lib/account";
 import { useBooking, quote } from "../lib/booking";
+import KlasVenster, { classBadge } from "./Klas";
 import type { Slot } from "../lib/booking";
 import { call, friendly } from "../lib/supabase";
 import { dayParts, everyWeekday, hourSpan, hourText, isoWeekday, longDay } from "../lib/dates";
@@ -16,14 +17,34 @@ const Loading = () => <Card pad={false}><Empty title="Even laden…" /></Card>;
 export function Boeken() {
   const data = useBooking();
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const tab = params.get("soort") === "groep" ? "groep" : "coach";
+  useEffect(() => { data.refresh(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const [flash, setFlash] = useState("");
+  const lessons = data.classes.filter((c) => c.status === "scheduled" && new Date(c.startsAt) > new Date());
+  const lessonDays = [...new Set(lessons.map((c) => c.date))];
+  const openClass = data.classes.find((c) => c.id === params.get("les")) || null;
+  const go = (next: Record<string, string>) => { const q = new URLSearchParams(params); Object.entries(next).forEach(([k, v]) => (v ? q.set(k, v) : q.delete(k))); setParams(q, { replace: true }); };
   const [kind, setKind] = useState("");
   const rows = useMemo(() => data.coaches.map((c) => ({ c, kinds: data.kindsOf(c.id), free: data.freeDays(c.id, kind || undefined).reduce((n, d) => n + d.free, 0) })), [data, kind]);
   const kinds = useMemo(() => [...new Set(rows.flatMap((r) => r.kinds))].sort((a, b) => a.localeCompare(b, "nl")), [rows]);
   const shown = rows.filter((r) => !kind || r.kinds.includes(kind))
     .sort((x, y) => Number(y.c.available) - Number(x.c.available) || Number(y.free > 0) - Number(x.free > 0));
   return (
-    <Page title="Boeken" text="Kies wat je wil doen en bij wie.">
-      {!data.ready ? <Loading /> : (<>
+    <Page title="Boeken" text={tab === "groep" ? "Schrijf je in voor een groepsles." : "Kies wat je wil doen en bij wie."}>
+      <Tabs label="Soort" value={tab} onChange={(t) => { setFlash(""); go({ soort: t === "groep" ? "groep" : "", les: "" }); }} tabs={[{ id: "coach", label: "Bij een coach" }, { id: "groep", label: "Groepslessen", count: lessons.length || undefined }]} />
+      {flash && <Notice>{flash}</Notice>}
+      {!data.ready ? <Loading /> : tab === "groep" ? (lessonDays.length ? lessonDays.map((d) => (
+        <div key={d}>
+          <h2 className="mb-2 px-1 text-lg font-semibold">{longDay(d)}</h2>
+          <List>
+            {lessons.filter((c) => c.date === d).map((c) => { const badge = classBadge(c); return (
+              <ListRow key={c.id} lead={<span className="w-12 shrink-0 text-center font-semibold">{c.time}</span>} title={c.title} wrap
+                text={`${[c.trainerId, ...c.coTrainers].map((id) => data.coach(id)?.short).filter(Boolean).join(" en ")} · ${c.location || data.pricing.place}`}
+                below={<Badge tone={badge.tone}>{badge.text}</Badge>} onClick={() => { setFlash(""); go({ les: c.id }); }} />); })}
+          </List>
+        </div>
+      )) : <Card pad={false}><Empty icon={<UsersRound size={22} />} title="Nog geen groepslessen gepland" text="Zodra een coach een les plant, staat ze hier." /></Card>) : (<>
         {data.error && <Notice tone="danger">{data.error}</Notice>}
         {kinds.length > 1 && (
           <div className="slide-x gap-2" role="group" aria-label="Soort sessie">
@@ -42,6 +63,7 @@ export function Boeken() {
           </List>
         ) : <Card pad={false}><Empty icon={<CalendarX size={22} />} title="Nog geen coaches" text="Zodra een coach uren openzet, staan ze hier." /></Card>}
       </>)}
+      <KlasVenster klas={tab === "groep" ? openClass : null} onClose={() => go({ les: "" })} onDone={(text) => { go({ les: "" }); setFlash(text); }} />
     </Page>
   );
 }

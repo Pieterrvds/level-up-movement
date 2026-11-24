@@ -1,10 +1,12 @@
 // What a coach needs: the sessions clients asked for or booked with him, his earnings and the kinds of session
 // that exist. Loaded once for who has a trainer card, shared by "Vandaag", "Agenda" and the profile.
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { call, friendly } from "./supabase";
 import { useAccount } from "./account";
 import type { Booking } from "./account";
+import { toClass, STALE_MS } from "./booking";
+import type { GroupClass } from "./booking";
 import { slotStart } from "./dates";
 
 /** A session as the coach sees it: the booking plus who it is and what he should know */
@@ -13,33 +15,47 @@ export type CoachBooking = Booking & {
   health: { hasRisk: boolean; answers: Record<string, boolean>; notes: string; valid: boolean } | null;
 };
 export type Earnings = { sessions: number; earned: number; paid: number; owed: number; expected: number; isOwner: boolean };
-type Coach = { ready: boolean; error: string; bookings: CoachBooking[]; earnings: Earnings | null; kinds: string[]; reload: () => Promise<void> };
+/** A class the coach leads (or gives along), with whether it can be finished now */
+export type CoachClass = GroupClass & { canFinish: boolean };
+type Coach = { ready: boolean; error: string; bookings: CoachBooking[]; classes: CoachClass[]; earnings: Earnings | null; kinds: string[]; reload: () => Promise<void>; refresh: () => void };
 const Ctx = createContext<Coach | null>(null);
 
 export function CoachProvider({ children }: { children: ReactNode }) {
   const { player } = useAccount();
   const [bookings, setBookings] = useState<CoachBooking[]>([]);
+  const [classes, setClasses] = useState<CoachClass[]>([]);
   const [earnings, setEarnings] = useState<Earnings | null>(null);
   const [kinds, setKinds] = useState<string[]>([]);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
   const isCoach = Boolean(player?.trainerId);
+  const loadedAt = useRef(0);
   const reload = useCallback(async () => {
+    loadedAt.current = Date.now();
     if (!isCoach) { setReady(true); return; }
     try {
-      const [rows, money, list] = await Promise.all([
+      const [rows, money, list, lessons] = await Promise.all([
         call<CoachBooking[]>("coach_bookings"), call<Record<string, unknown> | null>("coach_earnings"),
         call<{ title: string; status: string }[]>("training_kinds").catch(() => []),
+        call<CoachClass[]>("class_manage_list", { p_days: 35 }).catch(() => []),
       ]);
+      // the admin's list holds every coach's classes; here only the ones this coach gives
+      setClasses((lessons || []).map((c) => toClass(c)).filter((c) => c.trainerId === player?.trainerId || c.coTrainers.includes(player?.trainerId || "-")));
       setBookings((rows || []).map((b) => ({ ...b, hour: Number(b.hour), price: Number(b.price) })));
       setEarnings(money ? { sessions: Number(money.sessions) || 0, earned: Number(money.earned) || 0, paid: Number(money.paid) || 0, owed: Number(money.owed) || 0, expected: Number(money.expected) || 0, isOwner: Boolean(money.isOwner) } : null);
       setKinds((list || []).filter((k) => k.status === "approved").map((k) => k.title));
       setError("");
     } catch (err) { setError(friendly(err)); }
     setReady(true);
-  }, [isCoach]);
+  }, [isCoach, player?.trainerId]);
   useEffect(() => { void reload(); }, [reload]);
-  return <Ctx.Provider value={{ ready, error, bookings, earnings, kinds, reload }}>{children}</Ctx.Provider>;
+  const refresh = useCallback(() => { if (Date.now() - loadedAt.current > STALE_MS) void reload(); }, [reload]);
+  useEffect(() => {
+    const back = () => { if (document.visibilityState === "visible") refresh(); };
+    document.addEventListener("visibilitychange", back);
+    return () => document.removeEventListener("visibilitychange", back);
+  }, [refresh]);
+  return <Ctx.Provider value={{ ready, error, bookings, classes, earnings, kinds, reload, refresh }}>{children}</Ctx.Provider>;
 }
 export function useCoach(): Coach {
   const value = useContext(Ctx);

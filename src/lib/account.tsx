@@ -59,6 +59,8 @@ type Account = {
   setPassword: (password: string) => Promise<void>;
   logOut: () => Promise<void>;
   reload: () => Promise<void>;
+  /** load the account again when what we have is older than a moment */
+  refresh: () => void;
 };
 
 const Ctx = createContext<Account | null>(null);
@@ -82,7 +84,9 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const [picked, setPicked] = useState<string>(() => { try { return localStorage.getItem(ROLE_KEY) || ""; } catch { return ""; } });
   const userId = useRef<string | null>(null);
 
+  const loadedAt = useRef(0);
   const load = useCallback(async () => {
+    loadedAt.current = Date.now();
     try {
       const data = await call<Player | null>("my_data");
       if (!data) throw new Error("Je account werd niet gevonden.");
@@ -112,13 +116,20 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     return () => data.subscription.unsubscribe();
   }, [load]);
 
+  const refresh = useCallback(() => { if (userId.current && Date.now() - loadedAt.current > 15000) void load(); }, [load]);
+  useEffect(() => {
+    const back = () => { if (document.visibilityState === "visible") refresh(); };
+    document.addEventListener("visibilitychange", back);
+    return () => document.removeEventListener("visibilitychange", back);
+  }, [refresh]);
+
   const roles = useMemo(() => rolesOf(player), [player]);
   const role = roles.includes(picked as Role) ? (picked as Role) : roles[0];
 
   const value: Account = {
     status, player, error, roles, role, recovering,
     setRole: (r) => { setPicked(r); try { localStorage.setItem(ROLE_KEY, r); } catch { /* private window: fine */ } },
-    reload: load,
+    reload: load, refresh,
     async logIn(email, password) {
       const { error: e } = await supabase.auth.signInWithPassword({ email: cleanEmail(email), password });
       if (e) throw new Error(friendly(e));

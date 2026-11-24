@@ -1,7 +1,7 @@
 // What a client needs to book: the coaches, the hours they open, what is taken, the prices. One load, shared by
 // the start screen and the booking screens. The rules below mirror the server (it checks everything again when
 // a session is asked for): see `_book` in supabase/schema.sql of the old repository.
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { call, friendly } from "./supabase";
 import { addDays, dateKey, parseKey, slotStart, startOfWeek } from "./dates";
@@ -14,7 +14,17 @@ export const NO_KIND = "Personal training"; // hours without a label are the cla
 export type Coach = { id: string; name: string; short: string; role: string; bio: string; specialties: string[]; photo: string; available: boolean };
 export type HoursRow = { id: string; trainerId: string; weekday: number | null; date: string | null; start: number; end: number; kind: string; activity: string; location: string; pending: boolean };
 type Taken = { trainer_id: string; day: string; hour: number; booking_id: string | null; status: string | null };
-export type Pricing = { price: number; introPrice: number; place: string; trainers: Record<string, number>; packs: { size: number; price: number }[] };
+export type Pricing = { price: number; introPrice: number; place: string; trainers: Record<string, number>; packs: { size: number; price: number }[]; classCapacity: number };
+/** A group class as the server gives it (`_class_json`); `mine` is this person's own sign-up, if any */
+export type GroupClass = {
+  id: string; title: string; trainerId: string; coTrainers: string[]; startsAt: string; endsAt: string; minutes: number; date: string; time: string;
+  capacity: number; taken: number; waitlist: number; price: number; xp: number; location: string; note: string; status: string; cancelReason: string | null;
+  seriesId: string | null; pending: boolean; freeCancelUntil: string;
+  mine: null | { id: string; status: string; waitPos: number | null; payStatus: string };
+};
+export const toClass = <T extends GroupClass>(c: T): T => ({ ...c, minutes: Number(c.minutes), capacity: Number(c.capacity), taken: Number(c.taken), waitlist: Number(c.waitlist), price: Number(c.price), coTrainers: c.coTrainers || [] });
+/** "17:00 – 18:00" from a start time and the minutes a class lasts */
+export const classSpan = (c: { time: string; minutes: number }) => { const [h, m] = c.time.split(":").map(Number); const end = h * 60 + m + c.minutes; return `${c.time} – ${String(Math.floor(end / 60) % 24).padStart(2, "0")}:${String(end % 60).padStart(2, "0")}`; };
 export type Slot = { coachId: string; day: string; hour: number; what: string; place: string; state: "free" | "mine" | "taken" };
 
 // The first three coaches had their photo and title in the code of the old site, not in the database.
@@ -40,6 +50,8 @@ type Data = {
   ready: boolean;
   error: string;
   coaches: Coach[];
+  /** the group classes from today to the booking horizon (not the cancelled ones, unless you were signed up) */
+  classes: GroupClass[];
   pricing: Pricing;
   coach: (id: string) => Coach | undefined;
   /** every hour a coach opens on a day, with what is given, where, and whether it can still be asked for */
@@ -51,31 +63,39 @@ type Data = {
   /** the rows of hours of one coach as he set them (for the coach himself: also what waits for approval) */
   hoursOf: (coachId: string) => HoursRow[];
   reload: () => Promise<void>;
+  /** load again when what we have is older than a moment (a screen opens, the app comes back to the front) */
+  refresh: () => void;
 };
 const Ctx = createContext<Data | null>(null);
-const EMPTY: Pricing = { price: 50, introPrice: 0, place: "Grote zaal, Hoogstraat 40, Hofstade (Aalst)", trainers: {}, packs: [] };
+export const STALE_MS = 15000;
+const EMPTY: Pricing = { price: 50, introPrice: 0, place: "Grote zaal, Hoogstraat 40, Hofstade (Aalst)", trainers: {}, packs: [], classCapacity: 12 };
 
 export function BookingProvider({ children }: { children: ReactNode }) {
   const { player } = useAccount();
   const [coaches, setCoaches] = useState<Coach[]>([]);
   const [hours, setHours] = useState<HoursRow[]>([]);
   const [taken, setTaken] = useState<Taken[]>([]);
+  const [classes, setClasses] = useState<GroupClass[]>([]);
   const [pricing, setPricing] = useState<Pricing>(EMPTY);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
 
+  const loadedAt = useRef(0);
   const reload = useCallback(async () => {
+    loadedAt.current = Date.now();
     try {
       const from = dateKey(new Date()), to = dateKey(startOfWeek(WEEKS_AHEAD));
-      const [list, rows, slots, prices] = await Promise.all([
+      const [list, rows, slots, prices, lessons] = await Promise.all([
         call<CoachRow[]>("trainer_list"), call<HoursRow[]>("trainer_hours_list"),
         call<Taken[]>("slot_status", { p_from: from, p_to: to }), call<Partial<Pricing>>("pricing_info"),
+        call<GroupClass[]>("class_list", { p_from: from, p_to: to }).catch(() => []),
       ]);
+      setClasses((lessons || []).map((c) => toClass(c)));
       setCoaches((list || []).map(toCoach));
       setHours((rows || []).map((r) => ({ ...r, start: Number(r.start), end: Number(r.end), weekday: r.weekday === null ? null : Number(r.weekday) })));
       setTaken((slots || []).map((s) => ({ ...s, hour: Number(s.hour) })));
       setPricing({ price: Number(prices?.price ?? EMPTY.price), introPrice: Number(prices?.introPrice ?? 0), place: prices?.place || EMPTY.place, trainers: prices?.trainers || {},
-        packs: (prices?.packs || []).map((o) => ({ size: Number(o.size), price: Number(o.price) })) });
+        packs: (prices?.packs || []).map((o) => ({ size: Number(o.size), price: Number(o.price) })), classCapacity: Number(prices?.classCapacity) || EMPTY.classCapacity });
       setError("");
     } catch (err) {
       setError(friendly(err));
@@ -83,6 +103,12 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     setReady(true);
   }, []);
   useEffect(() => { void reload(); }, [reload, player?.id]);
+  const refresh = useCallback(() => { if (Date.now() - loadedAt.current > STALE_MS) void reload(); }, [reload]);
+  useEffect(() => {
+    const back = () => { if (document.visibilityState === "visible") refresh(); };
+    document.addEventListener("visibilitychange", back);
+    return () => document.removeEventListener("visibilitychange", back);
+  }, [refresh]);
 
   const value = useMemo<Data>(() => {
     const byId = new Map(coaches.map((c) => [c.id, c]));
@@ -126,8 +152,8 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     };
     const kindsOf = (coachId: string) => [...new Set(hours.filter((r) => r.trainerId === coachId && r.kind === "open" && !r.pending).map((r) => r.activity || NO_KIND))];
     const hoursOf = (coachId: string) => hours.filter((r) => r.trainerId === coachId);
-    return { ready, error, coaches, pricing, coach: (id) => byId.get(id), slots, freeDays, kindsOf, hoursOf, reload };
-  }, [coaches, hours, taken, pricing, ready, error, reload]);
+    return { ready, error, coaches, classes, pricing, coach: (id) => byId.get(id), slots, freeDays, kindsOf, hoursOf, reload, refresh };
+  }, [coaches, hours, taken, classes, pricing, ready, error, reload, refresh]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
